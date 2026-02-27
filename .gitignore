@@ -1,0 +1,37 @@
+# ─── OpenTofu / Terraform runtime artifacts ───
+# Provider plugins and cached modules (re-created by `tofu init`)
+**/.terraform*
+# Preserve terraform-docs config at root
+!.terraform-docs.yml
+
+# ─── State and plan files (contain secrets — NEVER commit) ───
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+
+# ─── Variable overrides (may contain secrets or local paths) ───
+main.auto.tfvars
+*.auto.tfvars
+
+# Ignore override files (used for local resource overrides, not checked in)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ─── OpenTofu crash logs ───
+crash.log
+crash.*.log
+
+# ─── Generated artifacts (written by module outputs / provisioners) ───
+kubeconfig
+kubeconfig.yaml
+rancher-host-key
+
+# ─── IDE and editor settings ───
+.vscode/*
+.idea/
+
+# ─── Python virtual environment (compliance tooling) ───
+.venv/
