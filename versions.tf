@@ -8,13 +8,18 @@
 #      Acceptable for a module that provisions production infrastructure.
 # See: docs/ARCHITECTURE.md — Provider Flow
 #
-# DECISION: L3 providers (hcloud, aws) declared here even though the rke2-cluster
-#      child module has its own provider configurations internally.
-# Why: The root module creates the ingress LB (hcloud) and DNS record (aws)
-#      directly. These resources need the provider configured in the root scope.
-#      The rke2-cluster child module uses its OWN hcloud/aws instances internally
-#      (anti-pattern inherited from terraform-hcloud-ubuntu-rke2 which was designed
-#      as a root module, not a child).
+# DECISION: hcloud declared in root even though the rke2-cluster child module
+#      has its own hcloud provider configuration internally.
+# Why: The root module creates the ingress LB directly. This resource needs
+#      the provider configured in the root scope.
+#      The rke2-cluster child module uses its OWN hcloud instance internally
+#      (anti-pattern inherited from terraform-hcloud-ubuntu-rke2 which was
+#      designed as a root module, not a child).
+#
+# DECISION: AWS provider removed.
+# Why: Route53 DNS management was removed. DNS is now the operator's
+#      responsibility — point the A-record for rancher_hostname to the
+#      ingress_lb_ipv4 output.
 # ──────────────────────────────────────────────────────────────────────────────
 
 terraform {
@@ -26,16 +31,11 @@ terraform {
   required_providers {
     # ── L3: Infrastructure providers ──────────────────────────────────────────
     # NOTE: Version MUST match terraform-hcloud-ubuntu-rke2 to avoid conflicts
-    #       when the rke2 module is used as a child (both declare hcloud/aws).
+    #       when the rke2 module is used as a child (both declare hcloud).
 
     hcloud = {
       source  = "hetznercloud/hcloud"
       version = "= 1.60.1"
-    }
-
-    aws = {
-      source  = "hashicorp/aws"
-      version = "= 6.33.0"
     }
 
     # ── L4: Kubernetes management providers ───────────────────────────────────
@@ -75,7 +75,6 @@ terraform {
 # | Provider              | Source                  | Version   | Updated    |
 # |-----------------------|-------------------------|-----------|------------|
 # | hcloud                | hetznercloud/hcloud     | 1.60.1    | 2026-02-26 |
-# | aws                   | hashicorp/aws           | 6.33.0    | 2026-02-26 |
 # | helm                  | hashicorp/helm          | 3.1.1     | 2026-02-26 |
 # | kubernetes            | hashicorp/kubernetes    | 3.0.1     | 2026-02-26 |
 # | kubectl               | alekc/kubectl           | 2.1.3     | 2026-02-26 |

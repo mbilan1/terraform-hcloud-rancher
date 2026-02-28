@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Management cluster**: Single-node or HA RKE2 cluster on Hetzner Cloud via [terraform-hcloud-rke2](https://github.com/astract/terraform-hcloud-rke2)
+- **Management cluster**: Single-node or HA RKE2 cluster on Hetzner Cloud via the `terraform-hcloud-rke2` module
 - **Rancher installation**: cert-manager + Rancher Helm chart deployed in single `tofu apply`
 - **Admin bootstrap**: `rancher2_bootstrap` resource sets admin password and server URL
 - **TLS sources**: Self-signed (Rancher CA), Let's Encrypt, or user-provided certificate

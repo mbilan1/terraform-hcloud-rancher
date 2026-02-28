@@ -28,7 +28,7 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that deploys a **Ranche
 
 - **IaC tool**: OpenTofu >= 1.7.0 — always use `tofu`, **never** `terraform`
 - **Cloud provider**: Hetzner Cloud (EU data centers: Helsinki, Nuremberg, Falkenstein)
-- **Kubernetes distribution**: RKE2 (via [terraform-hcloud-rke2](https://github.com/astract/terraform-hcloud-rke2))
+- **Kubernetes distribution**: RKE2 (via the `terraform-hcloud-rke2` module)
 - **Management plane**: Rancher (cert-manager + Helm chart + bootstrap)
 - **OS**: Ubuntu 24.04 LTS
 - **DNS**: AWS Route53 (optional)
@@ -133,8 +133,8 @@ Phase 2 (L4): module.rancher → cert-manager + Rancher Helm + bootstrap + NodeD
 - Do NOT merge them.
 
 ### RKE2 Module Dependency
-- `modules/rke2-cluster/main.tf` sources `terraform-hcloud-rke2` via **local path** (`../../../terraform-hcloud-rke2`)
-- This must be replaced with a git-tagged source URL before public release
+- `modules/rke2-cluster/main.tf` sources `terraform-hcloud-ubuntu-rke2` via **git** (`git::https://github.com/mbilan1/terraform-hcloud-ubuntu-rke2.git`)
+- Pin to a release tag (`?ref=v1.0.0`) when available for reproducibility
 - The rke2 module brings its own providers (known anti-pattern) — version pins in `versions.tf` MUST match
 
 ---

@@ -35,9 +35,6 @@ mock_provider "hcloud" {
   }
 }
 
-mock_provider "aws" {}
-
-# L4 providers (used by rancher child module)
 mock_provider "helm" {}
 mock_provider "kubernetes" {}
 mock_provider "kubectl" {}
@@ -297,34 +294,7 @@ run "tls_source_accepts_secret" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V08: aws_region — must look like an AWS region                        ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-run "aws_region_rejects_invalid" {
-  command = plan
-
-  variables {
-    hcloud_api_token = "mock-token"
-    rancher_hostname = "rancher.example.com"
-    admin_password   = "SecurePassword123"
-    aws_region       = "europe"
-  }
-
-  expect_failures = [var.aws_region]
-}
-
-run "aws_region_accepts_valid" {
-  command = plan
-
-  variables {
-    hcloud_api_token = "mock-token"
-    rancher_hostname = "rancher.example.com"
-    admin_password   = "SecurePassword123"
-    aws_region       = "us-west-2"
-  }
-}
-
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V09: kubernetes_version — must be rke2 format or empty                ║
+# ║  UT-V08: kubernetes_version — must be rke2 format or empty                ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "kubernetes_version_rejects_invalid" {
   command = plan
@@ -362,7 +332,7 @@ run "kubernetes_version_accepts_rke2_format" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V10: k8s_api_allowed_cidrs — must not be empty                        ║
+# ║  UT-V09: k8s_api_allowed_cidrs — must not be empty                        ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "k8s_api_cidrs_rejects_empty_list" {
   command = plan
@@ -378,7 +348,7 @@ run "k8s_api_cidrs_rejects_empty_list" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V11: hcloud_network_cidr — must be valid CIDR                         ║
+# ║  UT-V10: hcloud_network_cidr — must be valid CIDR                         ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "network_cidr_rejects_invalid" {
   command = plan
@@ -394,7 +364,7 @@ run "network_cidr_rejects_invalid" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V12: hcloud_network_zone — must be one of allowed zones               ║
+# ║  UT-V11: hcloud_network_zone — must be one of allowed zones               ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "network_zone_rejects_invalid" {
   command = plan

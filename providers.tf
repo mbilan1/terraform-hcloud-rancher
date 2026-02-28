@@ -16,18 +16,13 @@
 #      OpenTofu defers provider initialization until the first resource needs it,
 #      so the cyclic appearance (output feeds provider config) resolves naturally
 #      through the dependency graph.
+#
+# DECISION: AWS provider removed.
+# Why: Route53 DNS management was the only use case. DNS is now the operator's
+#      responsibility (point the A-record for rancher_hostname to ingress_lb_ipv4).
+#      Removing AWS eliminates the only external cloud dependency and simplifies
+#      the provider graph.
 # ──────────────────────────────────────────────────────────────────────────────
-
-locals {
-  # WORKAROUND: Keep AWS provider auth logic centralized (mirrors rke2 module pattern).
-  # Why: The AWS provider eagerly validates credentials during init. When Route53
-  #      is unused, dummy values prevent init failures without real AWS credentials.
-  aws_dns_is_enabled = var.route53_zone_id != ""
-
-  aws_access_key_effective = (!local.aws_dns_is_enabled && var.aws_access_key == "") ? "unused" : var.aws_access_key
-  aws_secret_key_effective = (!local.aws_dns_is_enabled && var.aws_secret_key == "") ? "unused" : var.aws_secret_key
-  aws_skip_validation      = !local.aws_dns_is_enabled
-}
 
 # ── Hetzner Cloud ────────────────────────────────────────────────────────────
 # NOTE: This provider instance is used by root-level resources only (ingress LB,
@@ -35,22 +30,6 @@ locals {
 #       OWN hcloud provider internally with the same token.
 provider "hcloud" {
   token = var.hcloud_api_token
-}
-
-# ── AWS (Route53 DNS management) ─────────────────────────────────────────────
-# DECISION: Provide dummy credentials when Route53 is unused.
-# Why: The AWS provider validates credentials eagerly at init time. Without
-#      dummy values, operators who don't use Route53 would need to export
-#      AWS_* environment variables or the plan fails before reaching any
-#      AWS resource. The skip_* flags disable unnecessary API calls entirely.
-provider "aws" {
-  region     = var.aws_region
-  access_key = local.aws_access_key_effective
-  secret_key = local.aws_secret_key_effective
-
-  skip_credentials_validation = local.aws_skip_validation
-  skip_requesting_account_id  = local.aws_skip_validation
-  skip_metadata_api_check     = local.aws_skip_validation
 }
 
 # ── Helm (cert-manager + Rancher chart installation) ─────────────────────────

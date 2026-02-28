@@ -8,15 +8,6 @@
 # See: docs/ARCHITECTURE.md — Module Architecture
 # ──────────────────────────────────────────────────────────────────────────────
 
-# ── DNS requires Route53 zone ────────────────────────────────────────────────
-
-check "dns_requires_zone" {
-  assert {
-    condition     = !var.create_dns_record || var.route53_zone_id != ""
-    error_message = "create_dns_record is true but route53_zone_id is empty. Provide a valid Route53 hosted zone ID."
-  }
-}
-
 # ── Management cluster minimum spec ─────────────────────────────────────────
 
 check "management_server_type_warning" {
@@ -49,14 +40,4 @@ check "letsencrypt_requires_email" {
   }
 }
 
-# ── AWS credentials must be provided as a pair ───────────────────────────────
 
-# DECISION: Ported from terraform-hcloud-ubuntu-rke2 guardrails.
-# Why: Providing only one half of the AWS credential pair is always a mistake.
-#      Both empty = use environment/instance profile. Both set = explicit creds.
-check "aws_credentials_pair_consistency" {
-  assert {
-    condition     = (var.aws_access_key == "" && var.aws_secret_key == "") || (var.aws_access_key != "" && var.aws_secret_key != "")
-    error_message = "AWS credentials must be provided as a pair: both aws_access_key and aws_secret_key must be set, or both must be empty."
-  }
-}

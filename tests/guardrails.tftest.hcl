@@ -27,7 +27,6 @@ mock_provider "hcloud" {
   }
 }
 
-mock_provider "aws" {}
 mock_provider "helm" {}
 mock_provider "kubernetes" {}
 mock_provider "kubectl" {}
@@ -48,49 +47,7 @@ override_module {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-G01: dns_requires_zone                                                ║
-# ║  create_dns_record = true without route53_zone_id → warning                ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-run "dns_requires_zone_rejects_missing_zone" {
-  command = plan
-
-  variables {
-    hcloud_api_token  = "mock-token"
-    rancher_hostname  = "rancher.example.com"
-    admin_password    = "SecurePassword123"
-    create_dns_record = true
-    route53_zone_id   = ""
-  }
-
-  expect_failures = [check.dns_requires_zone]
-}
-
-run "dns_requires_zone_accepts_with_zone" {
-  command = plan
-
-  variables {
-    hcloud_api_token  = "mock-token"
-    rancher_hostname  = "rancher.example.com"
-    admin_password    = "SecurePassword123"
-    create_dns_record = true
-    route53_zone_id   = "Z1234567890"
-  }
-}
-
-run "dns_requires_zone_accepts_no_dns" {
-  command = plan
-
-  variables {
-    hcloud_api_token  = "mock-token"
-    rancher_hostname  = "rancher.example.com"
-    admin_password    = "SecurePassword123"
-    create_dns_record = false
-    route53_zone_id   = ""
-  }
-}
-
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-G02: letsencrypt_requires_email                                        ║
+# ║  UT-G01: letsencrypt_requires_email                                        ║
 # ║  tls_source = "letsEncrypt" without email → warning                        ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "letsencrypt_requires_email_rejects_empty" {
@@ -132,43 +89,7 @@ run "letsencrypt_skipped_when_rancher_tls" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-G03: aws_credentials_pair_consistency                                  ║
-# ║  COMPROMISE: Cannot unit-test this check block in isolation.               ║
-# ║  Why: The rke2 module (nested inside module.rke2_cluster.module.cluster)   ║
-# ║       has an identical check block that also fires. override_module does    ║
-# ║       not suppress check blocks in nested modules, and expect_failures     ║
-# ║       cannot reference module-internal checks. The check block works       ║
-# ║       correctly at runtime — only the test is impossible.                  ║
-# ║  TODO: Re-enable when OpenTofu supports expect_failures for module checks  ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-
-# Positive tests still verify the check does NOT fire on valid input:
-run "aws_credentials_accepts_both_set" {
-  command = plan
-
-  variables {
-    hcloud_api_token = "mock-token"
-    rancher_hostname = "rancher.example.com"
-    admin_password   = "SecurePassword123"
-    aws_access_key   = "AKIAEXAMPLE"
-    aws_secret_key   = "secretkey123"
-  }
-}
-
-run "aws_credentials_accepts_both_empty" {
-  command = plan
-
-  variables {
-    hcloud_api_token = "mock-token"
-    rancher_hostname = "rancher.example.com"
-    admin_password   = "SecurePassword123"
-    aws_access_key   = ""
-    aws_secret_key   = ""
-  }
-}
-
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-G04: management_server_type_warning                                    ║
+# ║  UT-G02: management_server_type_warning                                    ║
 # ║  Undersized server type → advisory warning                                 ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "server_type_warns_undersized" {
@@ -207,7 +128,7 @@ run "server_type_accepts_cpx42" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-G05: rancher_hostname_is_fqdn                                         ║
+# ║  UT-G03: rancher_hostname_is_fqdn                                         ║
 # ║  Bare hostname (no dot) → advisory warning                                 ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "hostname_warns_bare_name" {

@@ -20,13 +20,9 @@ module "rke2_cluster" {
 
   # Credentials
   hcloud_api_token = var.hcloud_api_token
-  aws_access_key   = var.aws_access_key
-  aws_secret_key   = var.aws_secret_key
-  aws_region       = var.aws_region
 
   # Cluster identity
-  cluster_name   = var.cluster_name
-  cluster_domain = var.rancher_hostname
+  cluster_name = var.cluster_name
 
   # Topology
   control_plane_count       = var.management_node_count
@@ -125,27 +121,6 @@ resource "hcloud_load_balancer_service" "ingress_https" {
   }
 
   depends_on = [hcloud_load_balancer_target.ingress_masters]
-}
-
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  DNS — Route53 wildcard record for Rancher hostname                        ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-
-# DECISION: A-record (not wildcard) for the Rancher hostname.
-# Why: Rancher uses a single hostname (e.g. rancher.example.com), not a wildcard.
-#      Downstream clusters use their own DNS entries managed outside this module.
-# DECISION: Double-guard count condition (create_dns_record AND zone_id present).
-# Why: The check block warns about the misconfiguration, but the resource must
-#      also self-guard to prevent plan-time errors from the AWS provider when
-#      zone_id is empty. Defense in depth.
-resource "aws_route53_record" "rancher" {
-  count = var.create_dns_record && var.route53_zone_id != "" ? 1 : 0
-
-  zone_id = var.route53_zone_id
-  name    = var.rancher_hostname
-  type    = "A"
-  ttl     = 300
-  records = [hcloud_load_balancer.ingress.ipv4]
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗

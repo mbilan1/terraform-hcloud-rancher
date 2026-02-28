@@ -2,9 +2,10 @@
 # rke2-cluster child module — input variables
 #
 # DECISION: Expose only management-relevant variables from terraform-hcloud-ubuntu-rke2.
-# Why: The rke2 module has ~30 variables. A management cluster only needs a subset.
-#      Variables like harmony_enabled, agent_node_count, and openbao_enabled are
-#      hardcoded in main.tf because they have fixed values for a management cluster.
+# Why: The rke2 module has ~20 variables (post-minimization). A management cluster
+#      only needs a subset. Variables like cloud_provider_external and
+#      save_ssh_key_locally are hardcoded in main.tf because they have fixed
+#      values for a management cluster.
 # ──────────────────────────────────────────────────────────────────────────────
 
 # ── Credentials ──────────────────────────────────────────────────────────────
@@ -15,35 +16,10 @@ variable "hcloud_api_token" {
   sensitive   = true
 }
 
-variable "aws_access_key" {
-  description = "AWS access key for Route53 (passed through to rke2 module)"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "aws_secret_key" {
-  description = "AWS secret key for Route53 (passed through to rke2 module)"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "aws_region" {
-  description = "AWS region for Route53"
-  type        = string
-  default     = "eu-central-1"
-}
-
 # ── Cluster identity ─────────────────────────────────────────────────────────
 
 variable "cluster_name" {
   description = "Identifier prefix for all resources"
-  type        = string
-}
-
-variable "cluster_domain" {
-  description = "Domain for the management cluster (typically the Rancher hostname)"
   type        = string
 }
 

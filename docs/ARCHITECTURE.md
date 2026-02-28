@@ -153,7 +153,7 @@ terraform-hcloud-rancher/                # Root module (shim)
 Root module (provider configuration)
     │
     ├── module.rke2_cluster
-    │   └── uses: hcloud, cloudinit, remote, aws, random, tls, local
+    │   └── uses: hcloud, cloudinit, remote, random, tls, local
     │   └── outputs: cluster_host, client_cert, client_key, cluster_ca, ...
     │
     └── module.rancher
@@ -224,7 +224,7 @@ flowchart TB
 | LB (control plane) | lb11 | Ports 6443, 9345 |
 | LB (ingress) | lb11 | Ports 80, 443 — Rancher UI |
 | Network | 10.0.0.0/16 | Private subnet |
-| DNS | Route53 wildcard | `*.rancher.domain` → ingress LB |
+| DNS | Operator-managed | Point A-record for `rancher_hostname` → `ingress_lb_ipv4` output |
 | OS | Ubuntu 24.04 LTS | Same as downstream clusters |
 | K8s | RKE2 v1.34.x | Matches Rancher v2.13 default |
 
@@ -275,7 +275,7 @@ flowchart LR
 
 ```hcl
 module "rke2_cluster" {
-  source = "git::https://github.com/<owner>/terraform-hcloud-ubuntu-rke2.git?ref=v1.0.0"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-ubuntu-rke2.git"
 
   cluster_name              = var.cluster_name
   hcloud_token              = var.hcloud_token
@@ -283,7 +283,6 @@ module "rke2_cluster" {
   agent_node_count          = 0                          # No workers — Rancher on control plane
   control_plane_server_type = "cx43"                     # 8 vCPU, 16 GB minimum
   harmony_enabled           = false                      # Not needed for management
-  create_dns_record         = false                      # DNS managed by this module
 }
 ```
 
@@ -658,12 +657,11 @@ The module contains deliberate compromises. Each is documented in code comments 
 |---|----------|-----------|-----------|
 | 1 | K8s providers in module | Composability vs single-apply | Rancher install requires helm/kubernetes providers in the same module. Acceptable for a deployment module (not a reusable primitive). |
 | 2 | Single management node default | HA vs resource usage | Management cluster runs only Rancher. HA (3 nodes) is for production, not default. |
-| 3 | Route53 for DNS | AWS dependency for DNS | Inherited from terraform-hcloud-ubuntu-rke2. Temporary — will be replaced with a more fitting DNS solution. |
-| 4 | zsys-studio driver (v0.8.0) | Stability vs functionality | Bus factor = 1. Code is well-tested (2.2:1 test ratio) and forkable if needed. |
-| 5 | NodeDriver via raw manifest | Provider support vs control | `rancher2_node_driver` resource exists but may not support all fields (whitelistDomains, addCloudCredential annotations). Raw manifest gives full control. |
-| 6 | UI Extension via UIPlugin CRD | Automation vs manual | Alternative: operator adds git repo manually in UI. CRD approach is fully automated. |
-| 7 | No automated CCM/CSI on downstream | Automation vs scope | Post-cluster HCCM/CSI install is manual per downstream cluster. Automating via Fleet/cluster-template is a roadmap item. |
-| 8 | Cloud-init kubeconfig retrieval | Zero SSH vs data.external | terraform-hcloud-ubuntu-rke2 uses SSH for kubeconfig internally. This module consumes the output but adds no SSH of its own. |
+| 3 | zsys-studio driver (v0.8.0) | Stability vs functionality | Bus factor = 1. Code is well-tested (2.2:1 test ratio) and forkable if needed. |
+| 4 | NodeDriver via raw manifest | Provider support vs control | `rancher2_node_driver` resource exists but may not support all fields (whitelistDomains, addCloudCredential annotations). Raw manifest gives full control. |
+| 5 | UI Extension via UIPlugin CRD | Automation vs manual | Alternative: operator adds git repo manually in UI. CRD approach is fully automated. |
+| 6 | No automated CCM/CSI on downstream | Automation vs scope | Post-cluster HCCM/CSI install is manual per downstream cluster. Automating via Fleet/cluster-template is a roadmap item. |
+| 7 | Cloud-init kubeconfig retrieval | Zero SSH vs data.external | terraform-hcloud-ubuntu-rke2 uses SSH for kubeconfig internally. This module consumes the output but adds no SSH of its own. |
 
 ---
 
@@ -689,7 +687,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [x] rancher2_bootstrap (admin password, server URL)
 - [x] Hetzner NodeDriver CRD installation
 - [x] UI Extension installation
-- [x] DNS (Route53 wildcard for Rancher hostname)
+- [x] DNS (operator A-record: `ingress_lb_ipv4` output)
 - [x] examples/minimal/ — single-node management cluster
 - [x] ARCHITECTURE.md (this document)
 - [ ] AGENTS.md
@@ -709,7 +707,6 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [ ] Rancher Cloud Credential management via Terraform (rancher2_cloud_credential)
 - [ ] Cluster template with Hetzner defaults (server types, locations, firewall)
 - [ ] Automated downstream cluster creation via Terraform (optional)
-- [ ] Replace Route53 with a more suitable DNS provider
 - [ ] Rancher SAML/OIDC integration template
 - [ ] Network policies on management cluster
 - [ ] Audit logging configuration

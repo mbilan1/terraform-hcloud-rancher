@@ -17,34 +17,6 @@ variable "hcloud_api_token" {
   sensitive   = true
 }
 
-variable "aws_access_key" {
-  description = "AWS access key for Route53 DNS management. If empty, uses default AWS credentials chain."
-  type        = string
-  nullable    = false
-  sensitive   = true
-  default     = ""
-}
-
-variable "aws_secret_key" {
-  description = "AWS secret key for Route53 DNS management. If empty, uses default AWS credentials chain."
-  type        = string
-  nullable    = false
-  sensitive   = true
-  default     = ""
-}
-
-variable "aws_region" {
-  description = "AWS region for the Route53 provider."
-  type        = string
-  nullable    = false
-  default     = "eu-central-1"
-
-  validation {
-    condition     = can(regex("^[a-z]{2}-[a-z]+-\\d+$", var.aws_region))
-    error_message = "aws_region must look like an AWS region id (e.g. eu-central-1)."
-  }
-}
-
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Rancher configuration
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -203,24 +175,6 @@ variable "load_balancer_location" {
     condition     = length(var.load_balancer_location) > 0
     error_message = "load_balancer_location must not be empty."
   }
-}
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  DNS
-# ═══════════════════════════════════════════════════════════════════════════════
-
-variable "create_dns_record" {
-  description = "Create a Route53 DNS record for rancher_hostname pointing to the ingress LB. Requires route53_zone_id."
-  type        = bool
-  nullable    = false
-  default     = false
-}
-
-variable "route53_zone_id" {
-  description = "AWS Route53 hosted zone ID. Required when create_dns_record is true."
-  type        = string
-  nullable    = false
-  default     = ""
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
