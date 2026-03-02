@@ -27,7 +27,7 @@ module "cluster" {
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   rke2_cluster_name = var.cluster_name
-
+  cluster_domain    = var.cluster_domain
   # ── Topology (management-optimized) ──────────────────────────────────────
   control_plane_count     = var.control_plane_count
   master_node_server_type = var.control_plane_server_type
@@ -55,13 +55,10 @@ module "cluster" {
   #      stays in Terraform state only.
   save_ssh_key_locally = false
 
-  # DECISION: cloud_provider_external = false for management clusters.
-  # Why: When true, RKE2 adds a NoSchedule taint
-  #      (node.cloudprovider.kubernetes.io/uninitialized=true) that blocks ALL
-  #      pods until a Cloud Controller Manager removes it. Management clusters
-  #      run Rancher only — no HCCM is deployed (it's a Helmfile L4 concern for
-  #      workload clusters). The taint causes a deadlock: CoreDNS, ingress, and
-  #      all helm jobs stay Pending forever.
+  # DECISION: No cloud provider external taint for management clusters.
+  # Why: Management clusters run Rancher only — no HCCM is deployed. The
+  #      cloud_provider_external variable was removed from the upstream module
+  #      (terraform-hcloud-ubuntu-rke2 ≥ v1.x). Cloud provider integration
+  #      is now controlled at the addon level, not at the RKE2 bootstrap level.
   # See: docs/ARCHITECTURE.md — Deployment Flow
-  cloud_provider_external = false
 }

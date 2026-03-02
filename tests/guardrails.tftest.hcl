@@ -46,6 +46,80 @@ override_module {
   }
 }
 
+# WORKAROUND: Also override the inner upstream module to prevent it from being
+# evaluated when override_module for the wrapper doesn't fully prevent nested
+# submodule planning. OpenTofu still evaluates module.rke2_cluster.module.cluster
+# internals even with override_module on the parent wrapper.
+# TODO: Remove if OpenTofu fixes override_module to recursively skip submodules
+override_module {
+  target = module.rke2_cluster.module.cluster
+
+  outputs = {
+    cluster_host              = "https://1.2.3.4:6443"
+    cluster_ca                = "mock-ca-cert"
+    client_cert               = "mock-client-cert"
+    client_key                = "mock-client-key"
+    kube_config               = "mock-kubeconfig"
+    management_network_id     = "10001"
+    management_network_name   = "mock-network"
+    control_plane_lb_ipv4     = "1.2.3.4"
+    ingress_lb_ipv4           = ""
+    cluster_master_nodes_ipv4 = ["1.2.3.4"]
+    cluster_worker_nodes_ipv4 = []
+    cluster_issuer_name       = "letsencrypt-prod"
+    etcd_backup_enabled       = false
+    longhorn_enabled          = false
+    storage_driver            = "local-path"
+  }
+}
+
+# WORKAROUND: Override the infrastructure submodule inside the upstream rke2 module.
+# Why: override_module in OpenTofu 1.10.x does NOT recursively prevent nested
+#      submodules from being evaluated. Each nesting level must be explicitly overridden.
+#      Without this, hcloud_server.initial_control_plane[0] evaluates to empty tuple.
+# TODO: Remove when OpenTofu fixes override_module to recursively skip submodules
+override_module {
+  target = module.rke2_cluster.module.cluster.module.infrastructure
+
+  outputs = {
+    cluster_host          = "https://1.2.3.4:6443"
+    cluster_ca            = "mock-ca-cert"
+    client_cert           = "mock-client-cert"
+    client_key            = "mock-client-key"
+    kube_config           = "mock-kubeconfig"
+    network_id            = "10001"
+    network_name          = "mock-network"
+    control_plane_lb_ipv4 = "1.2.3.4"
+    ingress_lb_ipv4       = null
+    master_nodes_ipv4     = ["1.2.3.4"]
+    worker_nodes_ipv4     = []
+    worker_node_names     = []
+    master_ipv4           = "1.2.3.4"
+    ssh_private_key       = "mock-private-key"
+    cluster_ready         = "mock-ready-id"
+    control_plane_lb_name = "mock-lb"
+    _test_counts = {
+      ingress_lb           = 0
+      additional_masters   = 0
+      masters              = 1
+      workers              = 0
+      cp_ssh_service       = 0
+      ssh_key_file         = 0
+      dns_record           = 0
+      ingress_lb_targets   = 0
+      pre_upgrade_snapshot = 0
+    }
+    _test_firewall = {
+      has_udp_8472        = false
+      has_udp_51820_51821 = false
+      vxlan_not_public    = true
+      has_tcp_9345        = false
+      has_tcp_10250       = false
+      has_tcp_etcd        = false
+    }
+  }
+}
+
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  UT-G01: letsencrypt_requires_email                                        ║
 # ║  tls_source = "letsEncrypt" without email → warning                        ║

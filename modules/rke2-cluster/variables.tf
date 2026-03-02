@@ -23,6 +23,12 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "cluster_domain" {
+  description = "Base DNS domain for the cluster (e.g. 'rancher.example.com'). Required by the upstream rke2 module for DNS and cert-manager config."
+  type        = string
+  nullable    = false
+}
+
 # ── Topology ─────────────────────────────────────────────────────────────────
 
 variable "control_plane_count" {

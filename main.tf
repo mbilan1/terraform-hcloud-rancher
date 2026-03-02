@@ -22,7 +22,8 @@ module "rke2_cluster" {
   hcloud_api_token = var.hcloud_api_token
 
   # Cluster identity
-  cluster_name = var.cluster_name
+  cluster_name   = var.cluster_name
+  cluster_domain = var.rancher_hostname
 
   # Topology
   control_plane_count       = var.management_node_count
