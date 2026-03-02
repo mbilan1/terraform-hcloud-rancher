@@ -17,7 +17,12 @@
 
 output "rancher_url" {
   description = "Rancher UI URL (HTTPS)"
-  value       = module.rancher.rancher_url
+  value       = "https://${local.effective_hostname}"
+}
+
+output "rancher_hostname" {
+  description = "Effective Rancher hostname (auto-generated from LB IP if not provided)"
+  value       = local.effective_hostname
 }
 
 output "rancher_admin_token" {

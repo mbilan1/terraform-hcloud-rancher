@@ -83,3 +83,15 @@ variable "rke2_version" {
   default     = "v1.32.2+rke2r1"
   nullable    = false
 }
+
+# DECISION: extra_server_manifests passed through from root module.
+# Why: Allows root module to inject HelmChart CRDs (cert-manager, Rancher) into
+#      the cloud-init manifests directory. RKE2 HelmController installs them
+#      automatically — no direct K8s API access from Terraform needed.
+# See: providers.tf — helm/kubernetes providers removed in favor of this approach
+variable "extra_server_manifests" {
+  description = "Map of filename => YAML placed in /var/lib/rancher/rke2/server/manifests/. RKE2 HelmController auto-installs these."
+  type        = map(string)
+  default     = {}
+  nullable    = false
+}

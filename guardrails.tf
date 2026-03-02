@@ -22,8 +22,9 @@ check "management_server_type_warning" {
 # ── Rancher hostname should be a FQDN ───────────────────────────────────────
 
 check "rancher_hostname_is_fqdn" {
+  # NOTE: Skip check when hostname is empty (auto-generated from LB IP via sslip.io).
   assert {
-    condition     = can(regex("\\.", var.rancher_hostname))
+    condition     = var.rancher_hostname == "" || can(regex("\\.", var.rancher_hostname))
     error_message = "rancher_hostname should be a fully qualified domain name (e.g. 'rancher.example.com'), not a bare hostname."
   }
 }

@@ -15,6 +15,78 @@
 # ║  L3: RKE2 Cluster — Hetzner infrastructure via terraform-hcloud-rke2-core   ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
+# DECISION: Auto-generate rancher hostname from ingress LB IP when not provided.
+# Why: Enables single `tofu apply` without pre-existing DNS. The LB is created
+#      before the server (no server dependencies), so its IP is known when
+#      cloud-init templates are rendered. sslip.io resolves hostnames like
+#      "rancher.1-2-3-4.sslip.io" → 1.2.3.4 — zero DNS configuration needed.
+#      For production, users pass var.rancher_hostname with a real FQDN.
+# See: https://sslip.io/
+locals {
+  effective_hostname = (
+    var.rancher_hostname != ""
+    ? var.rancher_hostname
+    : "rancher.${replace(hcloud_load_balancer.ingress.ipv4, ".", "-")}.sslip.io"
+  )
+}
+
+# DECISION: Generate HelmChart CRD YAML manifests in root, pass to rke2_cluster.
+# Why: cert-manager and Rancher are deployed by RKE2 HelmController from
+#      /var/lib/rancher/rke2/server/manifests/. Generating the YAML here
+#      (in root) and passing via extra_server_manifests keeps the HelmChart
+#      content close to the variable definitions and allows full template
+#      flexibility (tls_source, letsEncrypt email, versions).
+# See: https://docs.rke2.io/helm — HelmChart CRD documentation
+locals {
+  # DECISION: Numeric prefix ensures alphabetical processing order.
+  # Why: RKE2 HelmController processes manifests alphabetically. cert-manager
+  #      MUST be installed before Rancher (Rancher creates Certificate resources
+  #      that require cert-manager CRDs + webhook).
+  rancher_server_manifests = {
+    "00-cert-manager.yaml" = <<-YAML
+      apiVersion: helm.cattle.io/v1
+      kind: HelmChart
+      metadata:
+        name: cert-manager
+        namespace: kube-system
+      spec:
+        repo: https://charts.jetstack.io
+        chart: cert-manager
+        version: "${var.cert_manager_version}"
+        targetNamespace: cert-manager
+        createNamespace: true
+        valuesContent: |-
+          crds:
+            enabled: true
+    YAML
+
+    "01-rancher.yaml" = <<-YAML
+      apiVersion: helm.cattle.io/v1
+      kind: HelmChart
+      metadata:
+        name: rancher
+        namespace: kube-system
+      spec:
+        repo: https://releases.rancher.com/server-charts/stable
+        chart: rancher
+        version: "${var.rancher_version}"
+        targetNamespace: cattle-system
+        createNamespace: true
+        valuesContent: |-
+          hostname: ${local.effective_hostname}
+          bootstrapPassword: ${var.admin_password}
+          replicas: 1
+          ingress:
+            tls:
+              source: ${var.tls_source}
+%{if var.tls_source == "letsEncrypt"~}
+          letsEncrypt:
+            email: ${var.letsencrypt_email}
+%{endif~}
+    YAML
+  }
+}
+
 module "rke2_cluster" {
   source = "./modules/rke2-cluster"
 
@@ -36,6 +108,12 @@ module "rke2_cluster" {
 
   # RKE2
   rke2_version = var.rke2_version
+
+  # DECISION: Pass HelmChart CRD manifests for L4 bootstrap via cloud-init.
+  # Why: Eliminates the need for helm/kubernetes Terraform providers which
+  #      require K8s API credentials. RKE2 HelmController handles installation
+  #      automatically from files in /var/lib/rancher/rke2/server/manifests/.
+  extra_server_manifests = local.rancher_server_manifests
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -129,27 +207,22 @@ module "rancher" {
   source = "./modules/rancher"
 
   # Rancher configuration
-  rancher_hostname     = var.rancher_hostname
-  rancher_version      = var.rancher_version
-  cert_manager_version = var.cert_manager_version
-  admin_password       = var.admin_password
-  tls_source           = var.tls_source
-  letsencrypt_email    = var.letsencrypt_email
+  rancher_hostname  = local.effective_hostname
+  rancher_version   = var.rancher_version
+  admin_password    = var.admin_password
+  tls_source        = var.tls_source
+  letsencrypt_email = var.letsencrypt_email
 
   # Hetzner Node Driver
   install_hetzner_driver = var.install_hetzner_driver
   hetzner_driver_version = var.hetzner_driver_version
 
-  # DECISION: Skip cert-manager installation in the rancher module.
-  # Why: The rke2-cluster module (terraform-hcloud-ubuntu-rke2 addons) always
-  #      deploys cert-manager as part of the cluster bootstrap. Installing it
-  #      again via the rancher module causes a Helm conflict:
-  #      "cannot re-use a name that is still in use".
-  # See: modules/rancher/variables.tf — skip_cert_manager
-  skip_cert_manager = true
-  # The helm/kubernetes/kubectl providers are configured with rke2_cluster outputs,
-  # creating an implicit dependency. The explicit depends_on is belt-and-suspenders:
-  # ensures the ingress LB is also ready before Rancher starts serving traffic.
+  # DECISION: Explicit dependency on L3 infrastructure + ingress LB.
+  # Why: rancher2_bootstrap polls the Rancher URL via HTTPS.
+  #      The ingress LB and its services must be ready before the
+  #      bootstrap can succeed. module.rke2_cluster must be complete
+  #      so the server is running and RKE2 HelmController can install
+  #      cert-manager + Rancher from the manifests directory.
   depends_on = [
     module.rke2_cluster,
     hcloud_load_balancer_service.ingress_https,

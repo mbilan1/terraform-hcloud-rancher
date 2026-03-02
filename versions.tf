@@ -41,18 +41,10 @@ terraform {
     }
 
     # ── L4: Kubernetes management providers ───────────────────────────────────
-    # NOTE: These providers communicate directly with the RKE2 API server at
-    #       initial_master_ipv4:6443 during bootstrap (insecure TLS).
-
-    helm = {
-      source  = "hashicorp/helm"
-      version = "= 3.1.1"
-    }
-
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "= 3.0.1"
-    }
+    # NOTE: helm and kubernetes providers REMOVED — cert-manager and Rancher are
+    #       now deployed via RKE2 HelmChart CRDs placed in cloud-init manifests.
+    #       Only kubectl (via Rancher proxy) and rancher2 (bootstrap mode) remain.
+    # See: providers.tf for rationale
 
     kubectl = {
       source  = "alekc/kubectl"
@@ -77,8 +69,8 @@ terraform {
 # | Provider              | Source                  | Version   | Updated    |
 # |-----------------------|-------------------------|-----------|------------|
 # | hcloud                | hetznercloud/hcloud     | 1.60.1    | 2026-02-26 |
-# | helm                  | hashicorp/helm          | 3.1.1     | 2026-02-26 |
-# | kubernetes            | hashicorp/kubernetes    | 3.0.1     | 2026-02-26 |
 # | kubectl               | alekc/kubectl           | 2.1.3     | 2026-02-26 |
 # | rancher2              | rancher/rancher2        | 13.1.4    | 2026-02-26 |
+# | helm (REMOVED)        | hashicorp/helm          | -         | 2026-03-02 |
+# | kubernetes (REMOVED)  | hashicorp/kubernetes    | -         | 2026-03-02 |
 # ──────────────────────────────────────────────────────────────────────────────

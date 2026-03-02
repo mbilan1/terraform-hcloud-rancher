@@ -45,21 +45,6 @@ variable "letsencrypt_email" {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  cert-manager configuration
-# ═══════════════════════════════════════════════════════════════════════════════
-
-variable "cert_manager_version" {
-  description = "cert-manager Helm chart version."
-  type        = string
-  nullable    = false
-}
-variable "skip_cert_manager" {
-  description = "Skip cert-manager Helm installation. Set to true when cert-manager is already deployed by the rke2-cluster module to prevent a duplicate-release conflict."
-  type        = bool
-  nullable    = false
-  default     = false
-}
-# ═══════════════════════════════════════════════════════════════════════════════
 #  Hetzner Node Driver (zsys-studio)
 # ═══════════════════════════════════════════════════════════════════════════════
 

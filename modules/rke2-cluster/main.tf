@@ -47,6 +47,12 @@ module "cluster" {
   # ── RKE2 ─────────────────────────────────────────────────────────────────
   rke2_version = var.rke2_version
 
+  # DECISION: Pass server manifests for HelmChart CRD-based L4 bootstrap.
+  # Why: cert-manager + Rancher are installed by RKE2 HelmController from
+  #      manifest files placed in cloud-init. This eliminates the need for
+  #      helm/kubernetes providers to have direct K8s API credentials.
+  extra_server_manifests = var.extra_server_manifests
+
   # DECISION: delete_protection hardcoded to true for management clusters.
   # Why: The management cluster runs Rancher, which manages ALL downstream clusters.
   #      Accidental deletion is catastrophic. Hardcoding true prevents the

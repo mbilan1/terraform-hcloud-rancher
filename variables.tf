@@ -22,14 +22,13 @@ variable "hcloud_api_token" {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 variable "rancher_hostname" {
-  description = "Fully qualified domain name for the Rancher UI (e.g. 'rancher.example.com'). Must resolve to the ingress LB."
+  # DECISION: Optional — auto-generates a sslip.io hostname from the ingress LB IP when empty.
+  # Why: Enables single `tofu apply` without pre-existing DNS. For production,
+  #      set a real FQDN that resolves to the ingress LB IPv4.
+  description = "FQDN for the Rancher UI (e.g. 'rancher.example.com'). Leave empty to auto-generate from ingress LB IP via sslip.io."
   type        = string
   nullable    = false
-
-  validation {
-    condition     = length(var.rancher_hostname) > 0
-    error_message = "rancher_hostname must not be empty."
-  }
+  default     = ""
 
   validation {
     condition     = var.rancher_hostname == trimspace(var.rancher_hostname)

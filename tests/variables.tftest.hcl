@@ -62,11 +62,8 @@ mock_provider "hcloud" {
   }
 }
 
-mock_provider "helm" {}
-mock_provider "kubernetes" {}
 mock_provider "kubectl" {}
 mock_provider "rancher2" {}
-mock_provider "random" {}
 
 # DECISION: Override module.rke2_cluster (wrapper) with mock outputs matching rke2-core API.
 # Why: rke2-core is a proper module and uses the root hcloud mock_provider, so its
@@ -285,9 +282,9 @@ run "admin_password_accepts_12_chars" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V05: rancher_hostname — must not be empty                             ║
+# ║  UT-V05: rancher_hostname — empty means auto-generate, whitespace rejected ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
-run "rancher_hostname_rejects_empty" {
+run "rancher_hostname_accepts_empty" {
   command = plan
 
   variables {
@@ -295,8 +292,6 @@ run "rancher_hostname_rejects_empty" {
     rancher_hostname = ""
     admin_password   = "SecurePassword123"
   }
-
-  expect_failures = [var.rancher_hostname]
 }
 
 run "rancher_hostname_rejects_whitespace" {

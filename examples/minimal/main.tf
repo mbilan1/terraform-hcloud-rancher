@@ -9,7 +9,8 @@
 #   tofu apply
 #
 # After apply:
-#   1. Point your DNS to the ingress_lb_ipv4 output
+#   1. The rancher_hostname output shows the auto-generated sslip.io URL
+#      (or your custom hostname if rancher_hostname is set)
 #   2. Open the rancher_url output in a browser
 #   3. Log in with admin / $TF_VAR_admin_password
 #   4. Create Cloud Credentials for downstream Hetzner projects
@@ -25,8 +26,11 @@ module "rancher_management" {
   hcloud_api_token = var.hcloud_api_token
 
   # ── Rancher configuration ───────────────────────────────────────────────────
-  rancher_hostname = var.rancher_hostname
-  admin_password   = var.admin_password
+  # DECISION: Hostname left empty for auto-generation via sslip.io.
+  # Why: Auto-generates "rancher.<LB-IP>.sslip.io" from the ingress LB IP,
+  #      enabling single `tofu apply` without pre-existing DNS.
+  #      For production, set rancher_hostname to a real FQDN.
+  admin_password = var.admin_password
 
   # DECISION: Use self-signed TLS for minimal example.
   # Why: Does not require a real domain, valid email, or public DNS.
@@ -49,6 +53,11 @@ module "rancher_management" {
 output "rancher_url" {
   description = "Rancher UI URL"
   value       = module.rancher_management.rancher_url
+}
+
+output "rancher_hostname" {
+  description = "Effective Rancher hostname (auto-generated from LB IP if not provided)"
+  value       = module.rancher_management.rancher_hostname
 }
 
 output "ingress_lb_ipv4" {
