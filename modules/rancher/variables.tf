@@ -53,7 +53,12 @@ variable "cert_manager_version" {
   type        = string
   nullable    = false
 }
-
+variable "skip_cert_manager" {
+  description = "Skip cert-manager Helm installation. Set to true when cert-manager is already deployed by the rke2-cluster module to prevent a duplicate-release conflict."
+  type        = bool
+  nullable    = false
+  default     = false
+}
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Hetzner Node Driver (zsys-studio)
 # ═══════════════════════════════════════════════════════════════════════════════

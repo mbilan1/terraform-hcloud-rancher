@@ -143,7 +143,13 @@ module "rancher" {
   install_hetzner_driver = var.install_hetzner_driver
   hetzner_driver_version = var.hetzner_driver_version
 
-  # Explicit dependency: Phase 2 requires Phase 1 (cluster + ingress LB) complete.
+  # DECISION: Skip cert-manager installation in the rancher module.
+  # Why: The rke2-cluster module (terraform-hcloud-ubuntu-rke2 addons) always
+  #      deploys cert-manager as part of the cluster bootstrap. Installing it
+  #      again via the rancher module causes a Helm conflict:
+  #      "cannot re-use a name that is still in use".
+  # See: modules/rancher/variables.tf — skip_cert_manager
+  skip_cert_manager = true
   # The helm/kubernetes/kubectl providers are configured with rke2_cluster outputs,
   # creating an implicit dependency. The explicit depends_on is belt-and-suspenders:
   # ensures the ingress LB is also ready before Rancher starts serving traffic.

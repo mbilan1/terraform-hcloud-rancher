@@ -17,7 +17,14 @@
 #      and dependency ordering within the chart. The crds.enabled=true flag
 #      installs CRDs as part of the chart, which is simpler than a separate
 #      kubectl apply of the CRD manifest.
+#
+# WORKAROUND: count = var.skip_cert_manager ? 0 : 1
+# Why: When used together with the rke2-cluster module, cert-manager is already
+#      deployed by the rke2 addons module. Deploying it again causes a Helm
+#      "cannot re-use a name that is still in use" error. skip_cert_manager=true
+#      disables this resource when rke2-cluster already owns cert-manager.
 resource "helm_release" "cert_manager" {
+  count = var.skip_cert_manager ? 0 : 1
   name             = "cert-manager"
   repository       = "https://charts.jetstack.io"
   chart            = "cert-manager"
@@ -92,21 +99,20 @@ resource "helm_release" "rancher" {
     ] : [],
   )
 
-  # DECISION: Use Rancher's built-in ingress-nginx (deployed by the chart).
-  # Why: The management cluster uses RKE2's built-in ingress controller.
-  #      Rancher chart creates Ingress resources that work with any
-  #      ingress controller — no special configuration needed.
-
+  # WORKAROUND: force_update = true — allows upgrading a release that is in
+  # "failed" state. The initial install may be marked failed by Helm if the
+  # wait timeout is hit (e.g. nginx webhook not yet ready), even though all
+  # pods are actually running. force_update lets the next apply proceed as
+  # an upgrade instead of blocking with "cannot re-use a name that is still
+  # in use".
   wait          = true
   wait_for_jobs = true
   timeout       = 600
+  force_update  = true
 
   depends_on = [helm_release.cert_manager]
 }
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  Admin bootstrap — initial admin password and server URL                   ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
 
 # DECISION: Use rancher2_bootstrap instead of manual API calls.
 # Why: The rancher2 provider in bootstrap mode handles the initial admin
