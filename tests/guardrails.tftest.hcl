@@ -25,98 +25,114 @@ mock_provider "hcloud" {
       ipv4 = "1.2.3.4"
     }
   }
+  mock_resource "hcloud_network" {
+    defaults = {
+      id = "10001"
+    }
+  }
+  mock_resource "hcloud_network_subnet" {
+    defaults = {
+      id = "10002"
+    }
+  }
+  mock_resource "hcloud_firewall" {
+    defaults = {
+      id = "20001"
+    }
+  }
+  mock_resource "hcloud_server" {
+    defaults = {
+      id           = "30001"
+      ipv4_address = "1.2.3.4"
+    }
+  }
+  mock_resource "hcloud_server_network" {
+    defaults = {
+      id = "30002"
+      ip = "10.0.1.1"
+    }
+  }
 }
 
 mock_provider "helm" {}
 mock_provider "kubernetes" {}
 mock_provider "kubectl" {}
 mock_provider "rancher2" {}
+mock_provider "random" {}
 
 override_module {
   target = module.rke2_cluster
 
   outputs = {
-    cluster_host          = "https://1.2.3.4:6443"
-    cluster_ca            = "mock-ca-cert"
-    client_cert           = "mock-client-cert"
-    client_key            = "mock-client-key"
-    kube_config           = "mock-kubeconfig"
-    network_id            = "10001"
-    control_plane_lb_ipv4 = "1.2.3.4"
+    network_id          = "10001"
+    initial_master_ipv4 = "1.2.3.4"
+    cluster_ready       = true
   }
 }
 
-# WORKAROUND: Also override the inner upstream module to prevent it from being
-# evaluated when override_module for the wrapper doesn't fully prevent nested
-# submodule planning. OpenTofu still evaluates module.rke2_cluster.module.cluster
-# internals even with override_module on the parent wrapper.
+# WORKAROUND: Override rke2-core submodule to prevent plan-time evaluation.
+# Why: override_module in OpenTofu 1.10.x is NOT recursive.
 # TODO: Remove if OpenTofu fixes override_module to recursively skip submodules
 override_module {
   target = module.rke2_cluster.module.cluster
 
   outputs = {
-    cluster_host              = "https://1.2.3.4:6443"
-    cluster_ca                = "mock-ca-cert"
-    client_cert               = "mock-client-cert"
-    client_key                = "mock-client-key"
-    kube_config               = "mock-kubeconfig"
-    management_network_id     = "10001"
-    management_network_name   = "mock-network"
-    control_plane_lb_ipv4     = "1.2.3.4"
-    ingress_lb_ipv4           = ""
-    cluster_master_nodes_ipv4 = ["1.2.3.4"]
-    cluster_worker_nodes_ipv4 = []
-    cluster_issuer_name       = "letsencrypt-prod"
-    etcd_backup_enabled       = false
-    longhorn_enabled          = false
-    storage_driver            = "local-path"
+    network_id                           = "10001"
+    network_subnet_id                    = "10002"
+    firewall_control_plane_ids           = ["20001"]
+    firewall_worker_ids                  = ["20002"]
+    control_plane_server_ids             = { "cp-0" = "30001" }
+    control_plane_ipv4_addresses         = { "cp-0" = "1.2.3.4" }
+    control_plane_private_ipv4_addresses = { "cp-0" = "10.0.1.1" }
+    initial_master_ipv4                  = "1.2.3.4"
+    cluster_token                        = "mock-cluster-token"
+    cluster_ready                        = true
   }
 }
 
-# WORKAROUND: Override the infrastructure submodule inside the upstream rke2 module.
-# Why: override_module in OpenTofu 1.10.x does NOT recursively prevent nested
-#      submodules from being evaluated. Each nesting level must be explicitly overridden.
-#      Without this, hcloud_server.initial_control_plane[0] evaluates to empty tuple.
-# TODO: Remove when OpenTofu fixes override_module to recursively skip submodules
+# WORKAROUND: Level 3 overrides for rke2-core internal submodules.
+# Why: override_module is NOT recursive in OpenTofu 1.10.x. Each nested module
+#      requires its own override_module to prevent plan-time evaluation.
+# TODO: Remove if OpenTofu adds recursive override_module
+
 override_module {
-  target = module.rke2_cluster.module.cluster.module.infrastructure
+  target = module.rke2_cluster.module.cluster.module.network
 
   outputs = {
-    cluster_host          = "https://1.2.3.4:6443"
-    cluster_ca            = "mock-ca-cert"
-    client_cert           = "mock-client-cert"
-    client_key            = "mock-client-key"
-    kube_config           = "mock-kubeconfig"
-    network_id            = "10001"
-    network_name          = "mock-network"
-    control_plane_lb_ipv4 = "1.2.3.4"
-    ingress_lb_ipv4       = null
-    master_nodes_ipv4     = ["1.2.3.4"]
-    worker_nodes_ipv4     = []
-    worker_node_names     = []
-    master_ipv4           = "1.2.3.4"
-    ssh_private_key       = "mock-private-key"
-    cluster_ready         = "mock-ready-id"
-    control_plane_lb_name = "mock-lb"
-    _test_counts = {
-      ingress_lb           = 0
-      additional_masters   = 0
-      masters              = 1
-      workers              = 0
-      cp_ssh_service       = 0
-      ssh_key_file         = 0
-      dns_record           = 0
-      ingress_lb_targets   = 0
-      pre_upgrade_snapshot = 0
-    }
-    _test_firewall = {
-      has_udp_8472        = false
-      has_udp_51820_51821 = false
-      vxlan_not_public    = true
-      has_tcp_9345        = false
-      has_tcp_10250       = false
-      has_tcp_etcd        = false
-    }
+    network_id          = "10001"
+    subnet_id           = "10002"
+    hcloud_network_cidr = "10.0.0.0/16"
+  }
+}
+
+override_module {
+  target = module.rke2_cluster.module.cluster.module.firewall
+
+  outputs = {
+    control_plane_firewall_ids = ["20001"]
+    worker_firewall_ids        = ["20002"]
+  }
+}
+
+override_module {
+  target = module.rke2_cluster.module.cluster.module.control_plane
+
+  outputs = {
+    server_ids                    = { "cp-0" = "30001" }
+    server_ipv4_addresses         = { "cp-0" = "1.2.3.4" }
+    server_private_ipv4_addresses = { "cp-0" = "10.0.1.1" }
+    initial_master_key            = "cp-0"
+    initial_master_ipv4           = "1.2.3.4"
+    initial_master_private_ipv4   = "10.0.1.1"
+  }
+}
+
+override_module {
+  target = module.rke2_cluster.module.cluster.module.readiness
+
+  outputs = {
+    cluster_ready = true
+    api_ready_id  = "mock-ready-id"
   }
 }
 

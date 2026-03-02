@@ -24,7 +24,7 @@
 #      "cannot re-use a name that is still in use" error. skip_cert_manager=true
 #      disables this resource when rke2-cluster already owns cert-manager.
 resource "helm_release" "cert_manager" {
-  count = var.skip_cert_manager ? 0 : 1
+  count            = var.skip_cert_manager ? 0 : 1
   name             = "cert-manager"
   repository       = "https://charts.jetstack.io"
   chart            = "cert-manager"

@@ -4,54 +4,44 @@
 # DECISION: All providers configured exclusively in the root module.
 # Why: OpenTofu best practice — child modules declare required_providers for
 #      version constraints only, but never contain provider {} blocks.
-#      Exception: the rke2-cluster child module sources terraform-hcloud-ubuntu-rke2
-#      which was designed as a root module and contains its own provider {} blocks.
-#      This is a known anti-pattern inherited from the rke2 module's architecture.
+#      rke2-core is a proper module — no internal provider blocks (unlike the
+#      previous terraform-hcloud-ubuntu-rke2 which was designed as a root module).
 # See: docs/ARCHITECTURE.md — Provider Flow
 #
-# DECISION: L4 providers (helm, kubernetes, kubectl, rancher2) configured using
-#      kubeconfig outputs from module.rke2_cluster.
-# Why: These providers need cluster credentials to communicate with the K8s API.
-#      The rke2 module produces these credentials after Phase 1 completes.
-#      OpenTofu defers provider initialization until the first resource needs it,
-#      so the cyclic appearance (output feeds provider config) resolves naturally
-#      through the dependency graph.
-#
-# DECISION: AWS provider removed.
-# Why: Route53 DNS management was the only use case. DNS is now the operator's
-#      responsibility (point the A-record for rancher_hostname to ingress_lb_ipv4).
-#      Removing AWS eliminates the only external cloud dependency and simplifies
-#      the provider graph.
+# DECISION: L4 providers (helm, kubernetes, kubectl) use initial_master_ipv4
+#      as the API endpoint with insecure TLS validation.
+# Why: rke2-core is Zero-SSH and does not output kubeconfig (by design, ADR-002).
+#      Kubeconfig for operator use is retrieved from Rancher UI post-bootstrap.
+#      The helm/kubernetes/kubectl providers communicate directly with the RKE2
+#      API server during the bootstrap phase when only a self-signed cert exists.
+# WORKAROUND: insecure = true / TLS skip is required because the RKE2 API
+#      server uses a self-signed cert at bootstrap time.
+# TODO: Evaluate replacing helm/kubernetes/kubectl providers with RKE2 HelmChart
+#      CRDs via cloud-init (place manifests in /var/lib/rancher/rke2/server/manifests/)
+#      to eliminate the dependency on direct K8s API access entirely.
 # ──────────────────────────────────────────────────────────────────────────────
 
 # ── Hetzner Cloud ────────────────────────────────────────────────────────────
-# NOTE: This provider instance is used by root-level resources only (ingress LB,
-#       DNS-related data sources). The rke2-cluster child module configures its
-#       OWN hcloud provider internally with the same token.
 provider "hcloud" {
   token = var.hcloud_api_token
 }
 
 # ── Helm (cert-manager + Rancher chart installation) ─────────────────────────
-# NOTE: Provider config uses outputs from module.rke2_cluster. OpenTofu defers
-#       initialization until a helm_release resource is evaluated in the plan.
+# NOTE: Provider config references initial_master_ipv4 from module.rke2_cluster.
+#       OpenTofu defers initialization until a helm_release resource is evaluated.
 # DECISION: Use attribute syntax (kubernetes = {}) for Helm provider v3.
 # Why: Helm provider v3 changed kubernetes config from a block to an attribute.
 provider "helm" {
   kubernetes = {
-    host                   = module.rke2_cluster.cluster_host
-    client_certificate     = module.rke2_cluster.client_cert
-    client_key             = module.rke2_cluster.client_key
-    cluster_ca_certificate = module.rke2_cluster.cluster_ca
+    host     = "https://${module.rke2_cluster.initial_master_ipv4}:6443"
+    insecure = true
   }
 }
 
 # ── Kubernetes (direct resource management) ──────────────────────────────────
 provider "kubernetes" {
-  host                   = module.rke2_cluster.cluster_host
-  client_certificate     = module.rke2_cluster.client_cert
-  client_key             = module.rke2_cluster.client_key
-  cluster_ca_certificate = module.rke2_cluster.cluster_ca
+  host     = "https://${module.rke2_cluster.initial_master_ipv4}:6443"
+  insecure = true
 }
 
 # ── kubectl (raw YAML manifest application) ──────────────────────────────────
@@ -59,19 +49,16 @@ provider "kubernetes" {
 # Why: NodeDriver and UIPlugin CRDs require fields not exposed by the kubernetes
 #      provider. kubectl_manifest supports arbitrary YAML.
 provider "kubectl" {
-  host                   = module.rke2_cluster.cluster_host
-  client_certificate     = module.rke2_cluster.client_cert
-  client_key             = module.rke2_cluster.client_key
-  cluster_ca_certificate = module.rke2_cluster.cluster_ca
-  load_config_file       = false
+  host             = "https://${module.rke2_cluster.initial_master_ipv4}:6443"
+  insecure         = true
+  load_config_file = false
 }
 
 # ── Rancher2 (bootstrap mode) ────────────────────────────────────────────────
 # DECISION: Single rancher2 provider in bootstrap mode.
 # Why: For MVP, the only rancher2 resource is rancher2_bootstrap (sets admin
-#      password, server URL, telemetry). Post-bootstrap resources (cloud credentials,
-#      cluster templates) are out of scope for now. Bootstrap mode only needs
-#      the Rancher API URL — no auth token required.
+#      password, server URL, telemetry). Bootstrap mode only needs the Rancher
+#      API URL — no auth token required.
 # NOTE: insecure = true because during initial bootstrap, cert-manager is
 #       provisioning the TLS certificate and it may not yet be trusted.
 # TODO: Add a second rancher2 provider (normal mode) when post-bootstrap

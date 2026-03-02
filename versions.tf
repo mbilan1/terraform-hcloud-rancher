@@ -23,15 +23,17 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 terraform {
-  # DECISION: Require >= 1.7.0 for alignment with terraform-hcloud-ubuntu-rke2.
-  # Why: The rke2 module uses `removed {}` blocks which require >= 1.7.0.
-  #      Using the same floor version ensures compatibility when used as a child.
-  required_version = ">= 1.7.0"
+  # DECISION: Align required_version with rke2-core minimum OpenTofu version.
+  # Why: rke2-core requires >= 1.8.0 for for_each on module calls and
+  #      OpenTofu 1.8+ features used in control_plane submodule.
+  required_version = ">= 1.8.0"
 
   required_providers {
     # ── L3: Infrastructure providers ──────────────────────────────────────────
-    # NOTE: Version MUST match terraform-hcloud-ubuntu-rke2 to avoid conflicts
-    #       when the rke2 module is used as a child (both declare hcloud).
+    # NOTE: rke2-core is a proper module \u2014 it declares hcloud in its own versions.tf
+    #       but does NOT configure a provider {} block. Provider configuration
+    #       flows down from the root module (standard OpenTofu pattern).
+    #       There are no more version conflicts with a second hcloud declaration.
 
     hcloud = {
       source  = "hetznercloud/hcloud"
@@ -39,8 +41,8 @@ terraform {
     }
 
     # ── L4: Kubernetes management providers ───────────────────────────────────
-    # NOTE: These are NOT used by terraform-hcloud-ubuntu-rke2.
-    #       They are new to this module for cert-manager, Rancher, and CRD install.
+    # NOTE: These providers communicate directly with the RKE2 API server at
+    #       initial_master_ipv4:6443 during bootstrap (insecure TLS).
 
     helm = {
       source  = "hashicorp/helm"

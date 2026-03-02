@@ -1,11 +1,14 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# Root module outputs — rewired from child modules
+# Root module outputs
 #
-# DECISION: Outputs grouped by concern: Rancher, Infrastructure, Cluster.
+# DECISION: Outputs grouped by concern: Rancher, Infrastructure.
 # Why: Consumers need different outputs for different tasks:
-#      - Rancher URL + token for downstream cluster provisioning
-#      - Kubeconfig for direct cluster management
+#      - Rancher URL + token for downstream cluster provisioning via UI
 #      - LB IPs for DNS configuration
+#      - network_id for cluster template pre-fill (ADR-005: shared VLAN)
+# NOTE: Kubeconfig outputs removed — kubeconfig is retrieved from Rancher UI
+#       post-bootstrap. This is a deliberate design decision (ADR-002 Zero-SSH).
+#       rke2-core does not output kubeconfig by design.
 # ──────────────────────────────────────────────────────────────────────────────
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -27,50 +30,17 @@ output "rancher_admin_token" {
 #  Infrastructure
 # ═══════════════════════════════════════════════════════════════════════════════
 
-output "control_plane_lb_ipv4" {
-  description = "IPv4 address of the control-plane load balancer (K8s API, registration)"
-  value       = module.rke2_cluster.control_plane_lb_ipv4
+output "initial_master_ipv4" {
+  description = "Public IPv4 of the initial master (control-plane node that bootstrapped the cluster)"
+  value       = module.rke2_cluster.initial_master_ipv4
 }
 
 output "ingress_lb_ipv4" {
-  description = "IPv4 address of the ingress load balancer (Rancher UI)"
+  description = "IPv4 address of the ingress load balancer (Rancher UI). Point DNS A record here."
   value       = hcloud_load_balancer.ingress.ipv4
 }
 
 output "network_id" {
-  description = "Hetzner Cloud private network ID (for reference)"
+  description = "Hetzner Cloud private network ID (for cluster template pre-fill — ADR-005)"
   value       = module.rke2_cluster.network_id
-}
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Cluster credentials
-# ═══════════════════════════════════════════════════════════════════════════════
-
-output "kube_config" {
-  description = "Full kubeconfig file content for direct cluster access"
-  value       = module.rke2_cluster.kube_config
-  sensitive   = true
-}
-
-output "cluster_host" {
-  description = "Kubernetes API server endpoint URL"
-  value       = module.rke2_cluster.cluster_host
-}
-
-output "cluster_ca" {
-  description = "Cluster CA certificate (PEM-encoded)"
-  value       = module.rke2_cluster.cluster_ca
-  sensitive   = true
-}
-
-output "client_cert" {
-  description = "Client certificate for cluster authentication (PEM-encoded)"
-  value       = module.rke2_cluster.client_cert
-  sensitive   = true
-}
-
-output "client_key" {
-  description = "Client private key for cluster authentication (PEM-encoded)"
-  value       = module.rke2_cluster.client_key
-  sensitive   = true
 }

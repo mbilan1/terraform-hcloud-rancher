@@ -42,7 +42,6 @@ module "rancher_management" {
   management_node_count     = 1
   control_plane_server_type = "cpx42"
   node_location             = "nbg1"
-  load_balancer_location    = "nbg1"
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
@@ -57,9 +56,9 @@ output "ingress_lb_ipv4" {
   value       = module.rancher_management.ingress_lb_ipv4
 }
 
-output "control_plane_lb_ipv4" {
-  description = "K8s API load balancer IP (for kubectl access)"
-  value       = module.rancher_management.control_plane_lb_ipv4
+output "initial_master_ipv4" {
+  description = "Public IP of the initial master node"
+  value       = module.rancher_management.initial_master_ipv4
 }
 
 output "rancher_admin_token" {

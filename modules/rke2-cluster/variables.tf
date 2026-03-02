@@ -1,30 +1,21 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # rke2-cluster child module — input variables
 #
-# DECISION: Expose only management-relevant variables from terraform-hcloud-ubuntu-rke2.
-# Why: The rke2 module has ~20 variables (post-minimization). A management cluster
-#      only needs a subset. Variables like cloud_provider_external and
-#      save_ssh_key_locally are hardcoded in main.tf because they have fixed
-#      values for a management cluster.
+# DECISION: Expose only the variables relevant for a management cluster.
+# Why: rke2-core has a clean flat API. The wrapper reduces it further:
+#      - hcloud_api_token removed: rke2-core uses providers from root (proper module)
+#      - cluster_domain removed: rke2-core is Zero-SSH, no cert-manager, no DNS
+#      - load_balancer_location removed: rke2-core does not create LBs (ADR-003)
+#      - ssh_allowed_cidrs removed: rke2-core is Zero-SSH (ADR-002), no port 22 rule
+#      - enable_secrets_encryption removed: not exposed by rke2-core
+#      - kubernetes_version renamed to rke2_version: matches rke2-core API
+# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-002-true-zero-ssh.md
 # ──────────────────────────────────────────────────────────────────────────────
-
-# ── Credentials ──────────────────────────────────────────────────────────────
-
-variable "hcloud_api_token" {
-  description = "Hetzner Cloud API token for the management project"
-  type        = string
-  sensitive   = true
-}
 
 # ── Cluster identity ─────────────────────────────────────────────────────────
 
 variable "cluster_name" {
   description = "Identifier prefix for all resources"
-  type        = string
-}
-
-variable "cluster_domain" {
-  description = "Base DNS domain for the cluster (e.g. 'rancher.example.com'). Required by the upstream rke2 module for DNS and cert-manager config."
   type        = string
   nullable    = false
 }
@@ -35,24 +26,21 @@ variable "control_plane_count" {
   description = "Number of control-plane nodes (1 or 3+)"
   type        = number
   default     = 1
+  nullable    = false
 }
 
 variable "control_plane_server_type" {
   description = "Hetzner server type for control-plane nodes"
   type        = string
   default     = "cx43"
+  nullable    = false
 }
 
 variable "node_location" {
   description = "Primary Hetzner datacenter location"
   type        = string
   default     = "hel1"
-}
-
-variable "load_balancer_location" {
-  description = "Hetzner datacenter for the control-plane load balancer"
-  type        = string
-  default     = "hel1"
+  nullable    = false
 }
 
 # ── Network ──────────────────────────────────────────────────────────────────
@@ -61,44 +49,37 @@ variable "hcloud_network_cidr" {
   description = "Private network CIDR"
   type        = string
   default     = "10.0.0.0/16"
+  nullable    = false
 }
 
 variable "subnet_address" {
   description = "Subnet CIDR for cluster nodes"
   type        = string
   default     = "10.0.1.0/24"
+  nullable    = false
 }
 
 variable "hcloud_network_zone" {
   description = "Hetzner network zone"
   type        = string
   default     = "eu-central"
+  nullable    = false
 }
 
 # ── Security ─────────────────────────────────────────────────────────────────
 
-variable "ssh_allowed_cidrs" {
-  description = "CIDR blocks allowed for SSH access"
-  type        = list(string)
-  default     = ["0.0.0.0/0", "::/0"]
-}
-
 variable "k8s_api_allowed_cidrs" {
-  description = "CIDR blocks allowed for K8s API access"
+  description = "CIDR blocks allowed for K8s API access (port 6443)"
   type        = list(string)
   default     = ["0.0.0.0/0", "::/0"]
-}
-
-variable "enable_secrets_encryption" {
-  description = "Enable Kubernetes Secrets encryption at rest in etcd"
-  type        = bool
-  default     = true
+  nullable    = false
 }
 
 # ── RKE2 ─────────────────────────────────────────────────────────────────────
 
-variable "kubernetes_version" {
-  description = "RKE2 release tag to deploy"
+variable "rke2_version" {
+  description = "RKE2 release tag to deploy (e.g. 'v1.32.2+rke2r1'). Empty = stable channel."
   type        = string
-  default     = "v1.34.4+rke2r1"
+  default     = "v1.32.2+rke2r1"
+  nullable    = false
 }

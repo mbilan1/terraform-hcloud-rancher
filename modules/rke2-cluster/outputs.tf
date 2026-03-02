@@ -1,52 +1,27 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # rke2-cluster child module — outputs
 #
-# DECISION: Expose only outputs needed by the parent module and sibling modules.
-# Why: The rke2 module has ~15 outputs. The parent needs:
-#      - Kubeconfig credentials for L4 provider configuration
-#      - Network ID for ingress LB attachment
-#      - LB IP for DNS record
+# DECISION: Expose only the L3 outputs produced by rke2-core.
+# Why: rke2-core is Zero-SSH and pure L3 — it does not produce kubeconfig,
+#      TLS certificates, or LB IPs (LBs are the consumer's responsibility, ADR-003).
+#      The parent module needs:
+#        - network_id: ingress LB network attachment
+#        - initial_master_ipv4: K8s API endpoint for L4 providers
+#        - cluster_ready: explicit dependency anchor for module.rancher
+# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-003-dual-load-balancer.md
 # ──────────────────────────────────────────────────────────────────────────────
 
-# ── Kubeconfig credentials (for L4 provider configuration) ───────────────────
-
-output "cluster_host" {
-  description = "Kubernetes API server endpoint URL"
-  value       = module.cluster.cluster_host
-}
-
-output "cluster_ca" {
-  description = "Cluster CA certificate (PEM-encoded)"
-  value       = module.cluster.cluster_ca
-  sensitive   = true
-}
-
-output "client_cert" {
-  description = "Client certificate for cluster authentication (PEM-encoded)"
-  value       = module.cluster.client_cert
-  sensitive   = true
-}
-
-output "client_key" {
-  description = "Client private key for cluster authentication (PEM-encoded)"
-  value       = module.cluster.client_key
-  sensitive   = true
-}
-
-output "kube_config" {
-  description = "Full kubeconfig file content"
-  value       = module.cluster.kube_config
-  sensitive   = true
-}
-
-# ── Infrastructure references (for ingress LB, DNS) ─────────────────────────
-
 output "network_id" {
-  description = "Hetzner Cloud private network ID"
-  value       = module.cluster.management_network_id
+  description = "Hetzner Cloud private network ID (for ingress LB attachment)"
+  value       = module.cluster.network_id
 }
 
-output "control_plane_lb_ipv4" {
-  description = "IPv4 address of the control-plane load balancer"
-  value       = module.cluster.control_plane_lb_ipv4
+output "initial_master_ipv4" {
+  description = "Public IPv4 of the initial master (K8s API endpoint host)"
+  value       = module.cluster.initial_master_ipv4
+}
+
+output "cluster_ready" {
+  description = "True when the K8s API server is reachable on port 6443"
+  value       = module.cluster.cluster_ready
 }

@@ -165,18 +165,6 @@ variable "node_location" {
   }
 }
 
-variable "load_balancer_location" {
-  description = "Hetzner datacenter location for load balancers. Should match node_location for lowest latency."
-  type        = string
-  nullable    = false
-  default     = "hel1"
-
-  validation {
-    condition     = length(var.load_balancer_location) > 0
-    error_message = "load_balancer_location must not be empty."
-  }
-}
-
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Network
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -221,18 +209,10 @@ variable "hcloud_network_zone" {
 #  Security / Access control
 # ═══════════════════════════════════════════════════════════════════════════════
 
-variable "ssh_allowed_cidrs" {
-  description = "CIDR blocks allowed to access SSH (port 22) on cluster nodes. Default: open (rke2 module uses SSH provisioners internally)."
-  type        = list(string)
-  nullable    = false
-  default     = ["0.0.0.0/0", "::/0"]
-
-  validation {
-    condition     = alltrue([for c in var.ssh_allowed_cidrs : can(cidrsubnet(c, 0, 0))])
-    error_message = "All ssh_allowed_cidrs entries must be valid CIDR blocks."
-  }
-}
-
+# DECISION: ssh_allowed_cidrs removed.
+# Why: rke2-core is Zero-SSH (ADR-002). No port 22 firewall rules are created.
+#      Operators who need SSH access bring their own Hetzner SSH keys via rke2-core's
+#      ssh_key_ids variable and manage firewall rules separately.
 variable "k8s_api_allowed_cidrs" {
   description = "CIDR blocks allowed to access the Kubernetes API (port 6443). Default: open."
   type        = list(string)
@@ -250,25 +230,22 @@ variable "k8s_api_allowed_cidrs" {
   }
 }
 
-variable "enable_secrets_encryption" {
-  description = "Enable Kubernetes Secrets encryption at rest in etcd via RKE2."
-  type        = bool
-  nullable    = false
-  default     = true
-}
+# DECISION: enable_secrets_encryption removed.
+# Why: rke2-core does not expose this variable. Secrets encryption is
+#      configurable via the rke2_config pass-through variable if needed.
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  RKE2 / Kubernetes
 # ═══════════════════════════════════════════════════════════════════════════════
 
-variable "kubernetes_version" {
-  description = "RKE2 release tag to deploy (e.g. 'v1.34.4+rke2r1'). Leave empty for stable channel."
+variable "rke2_version" {
+  description = "RKE2 release tag to deploy (e.g. 'v1.32.2+rke2r1'). Leave empty for stable channel."
   type        = string
   nullable    = false
-  default     = "v1.34.4+rke2r1"
+  default     = "v1.32.2+rke2r1"
 
   validation {
-    condition     = var.kubernetes_version == "" || can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.kubernetes_version))
-    error_message = "kubernetes_version must look like 'vX.Y.Z+rke2rN' (or be empty)."
+    condition     = var.rke2_version == "" || can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.rke2_version))
+    error_message = "rke2_version must look like 'vX.Y.Z+rke2rN' (or be empty)."
   }
 }

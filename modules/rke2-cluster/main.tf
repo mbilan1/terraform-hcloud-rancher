@@ -1,64 +1,57 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# rke2-cluster child module — management cluster via terraform-hcloud-ubuntu-rke2
+# rke2-cluster child module — L3 infrastructure via terraform-hcloud-rke2-core
 #
-# DECISION: Wrapper module with management-optimized defaults.
-# Why: The terraform-hcloud-ubuntu-rke2 module is a general-purpose RKE2
-#      provisioner. This wrapper fixes variables that are always the same for
-#      a Rancher management cluster:
-#        - cloud_provider_external = false (no HCCM for management clusters)
-#        - save_ssh_key_locally = false (no SSH access needed)
+# DECISION: Replaced terraform-hcloud-ubuntu-rke2 (v1) with terraform-hcloud-rke2-core (v2).
+# Why: rke2-core follows the composable primitive architecture:
+#        - Zero-SSH design — no SSH provisioners, no remote-exec
+#        - Pure L3 (no addons, no kubeconfig, no HCCM) — correct scope for this module
+#        - Proper module design — uses providers from root, no internal provider {} blocks
+#        - for_each over count — stable node identity
+# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-002-true-zero-ssh.md
 #
-# COMPROMISE: The rke2 module was designed as a root module and contains
-#      provider {} blocks internally. When used as a child module, OpenTofu
-#      emits a deprecation warning but it works. This is a known anti-pattern
-#      that will be resolved when the rke2 module extracts provider configs.
-# See: docs/ARCHITECTURE.md — Compromise Log #1
+# DECISION: Source is a local path to sibling repository.
+# Why: rke2-core lives at the same workdir level. Local path avoids git fetch
+#      on every init and keeps development cycle fast. Replace with a git URL
+#      or registry source when both repos are ready for a stable release.
+# TODO: Switch to git tag reference when rke2-core publishes v1.0.0
+#        source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=v1.0.0"
 # ──────────────────────────────────────────────────────────────────────────────
 
 module "cluster" {
-  # DECISION: Git source pinned to main branch.
-  # Why: Public GitHub repository is the single source of truth.
-  #      Pin to a release tag when available for reproducibility:
-  #        source = "git::https://github.com/mbilan1/terraform-hcloud-ubuntu-rke2.git?ref=v1.0.0"
-  source = "git::https://github.com/mbilan1/terraform-hcloud-ubuntu-rke2.git"
-
-  # ── Credentials ──────────────────────────────────────────────────────────
-  hcloud_api_token = var.hcloud_api_token
+  source = "../../../terraform-hcloud-rke2-core"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
-  rke2_cluster_name = var.cluster_name
-  cluster_domain    = var.cluster_domain
-  # ── Topology (management-optimized) ──────────────────────────────────────
-  control_plane_count     = var.control_plane_count
-  master_node_server_type = var.control_plane_server_type
-  node_locations          = [var.node_location]
-  load_balancer_location  = var.load_balancer_location
+  cluster_name = var.cluster_name
 
-  # ── Network ──────────────────────────────────────────────────────────────
+  # ── Topology ─────────────────────────────────────────────────────────────
+  # DECISION: Build control_plane_nodes map from count + type + location.
+  # Why: rke2-core uses map(object) for stable node identity (for_each).
+  #      The wrapper keeps a simple count API to avoid exposing the internal
+  #      map structure to the root module consumer.
+  control_plane_nodes = {
+    for i in range(var.control_plane_count) : "cp-${i}" => {
+      server_type = var.control_plane_server_type
+      location    = var.node_location
+    }
+  }
+
+  # ── Location & Network ───────────────────────────────────────────────────
+  hcloud_location     = var.node_location
+  hcloud_network_zone = var.hcloud_network_zone
   hcloud_network_cidr = var.hcloud_network_cidr
   subnet_address      = var.subnet_address
-  hcloud_network_zone = var.hcloud_network_zone
 
   # ── Security ─────────────────────────────────────────────────────────────
-  ssh_allowed_cidrs         = var.ssh_allowed_cidrs
-  k8s_api_allowed_cidrs     = var.k8s_api_allowed_cidrs
-  enable_secrets_encryption = var.enable_secrets_encryption
+  k8s_api_allowed_cidrs = var.k8s_api_allowed_cidrs
 
   # ── RKE2 ─────────────────────────────────────────────────────────────────
-  kubernetes_version = var.kubernetes_version
+  rke2_version = var.rke2_version
 
-  # ── Fixed for management cluster ─────────────────────────────────────────
-
-  # DECISION: No SSH key saved to disk.
-  # Why: Zero SSH principle — management cluster should not require SSH access.
-  #      The rke2 module uses SSH internally for provisioners, but the key
-  #      stays in Terraform state only.
-  save_ssh_key_locally = false
-
-  # DECISION: No cloud provider external taint for management clusters.
-  # Why: Management clusters run Rancher only — no HCCM is deployed. The
-  #      cloud_provider_external variable was removed from the upstream module
-  #      (terraform-hcloud-ubuntu-rke2 ≥ v1.x). Cloud provider integration
-  #      is now controlled at the addon level, not at the RKE2 bootstrap level.
-  # See: docs/ARCHITECTURE.md — Deployment Flow
+  # DECISION: delete_protection hardcoded to true for management clusters.
+  # Why: The management cluster runs Rancher, which manages ALL downstream clusters.
+  #      Accidental deletion is catastrophic. Hardcoding true prevents the
+  #      rke2-core advisory check from firing in tests and enforces a sensible
+  #      production default. Users who need to destroy must disable protection
+  #      manually via the Hetzner Cloud console.
+  delete_protection = true
 }
