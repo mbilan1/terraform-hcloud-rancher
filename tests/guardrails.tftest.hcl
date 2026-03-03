@@ -7,15 +7,11 @@
 # See: docs/ARCHITECTURE.md
 # ──────────────────────────────────────────────────────────────────────────────
 
-# ── Mock providers ──────────────────────────────────────────────────────────
-
 # ── Mock providers & module overrides ────────────────────────────────────────
 #
-# DECISION: Use override_module for module.rke2_cluster instead of mocking all
-#           its internal providers individually.
-# Why: The rke2 module contains provider {} blocks with arguments (token, region)
-#      that mock providers don't accept. override_module skips the child module's
-#      internals entirely.
+# DECISION: Only two mock providers — hcloud + rancher2.
+# Why: kubectl provider was eliminated. All L4 resources (NodeDriver, UIPlugin)
+#      are deployed via cloud-init manifests.
 # See: tests/variables.tftest.hcl for detailed rationale.
 
 mock_provider "hcloud" {
@@ -54,7 +50,6 @@ mock_provider "hcloud" {
   }
 }
 
-mock_provider "kubectl" {}
 mock_provider "rancher2" {}
 
 override_module {
@@ -237,5 +232,58 @@ run "hostname_accepts_fqdn" {
     hcloud_api_token = "mock-token"
     rancher_hostname = "rancher.example.com"
     admin_password   = "SecurePassword123"
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-G04: byo_ingress_lb_requires_hostname_or_ip                           ║
+# ║  BYO LB without hostname or IP → error                                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "byo_lb_rejects_no_hostname_no_ip" {
+  command = plan
+
+  variables {
+    hcloud_api_token         = "mock-token"
+    admin_password           = "SecurePassword123"
+    create_ingress_lb        = false
+    existing_ingress_lb_ipv4 = ""
+    rancher_hostname         = ""
+  }
+
+  expect_failures = [check.byo_ingress_lb_requires_hostname_or_ip]
+}
+
+run "byo_lb_accepts_existing_ip" {
+  command = plan
+
+  variables {
+    hcloud_api_token         = "mock-token"
+    admin_password           = "SecurePassword123"
+    create_ingress_lb        = false
+    existing_ingress_lb_ipv4 = "1.2.3.4"
+    rancher_hostname         = ""
+  }
+}
+
+run "byo_lb_accepts_explicit_hostname" {
+  command = plan
+
+  variables {
+    hcloud_api_token         = "mock-token"
+    admin_password           = "SecurePassword123"
+    create_ingress_lb        = false
+    existing_ingress_lb_ipv4 = ""
+    rancher_hostname         = "rancher.example.com"
+  }
+}
+
+run "create_lb_accepts_no_hostname" {
+  command = plan
+
+  variables {
+    hcloud_api_token  = "mock-token"
+    admin_password    = "SecurePassword123"
+    create_ingress_lb = true
+    rancher_hostname  = ""
   }
 }

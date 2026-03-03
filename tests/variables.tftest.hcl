@@ -12,11 +12,8 @@
 #
 # DECISION: Use override_module for module.rke2_cluster instead of mocking all
 #           its internal providers individually.
-# Why: The rke2 module (terraform-hcloud-ubuntu-rke2) was designed as a root
-#      module and contains its own provider {} blocks with arguments (token,
-#      region, etc.). Mock providers don't accept provider-specific arguments,
-#      causing plan failures. override_module completely skips planning the
-#      child module's internals, providing mock outputs directly.
+# Why: override_module completely skips planning the child module's internals,
+#      providing mock outputs directly.
 # See: docs/ARCHITECTURE.md — Compromise Log #1
 
 # WORKAROUND: Hetzner provider uses numeric IDs internally, but Terraform
@@ -25,7 +22,10 @@
 # causing plan failures. We override IDs with numeric strings.
 # TODO: Remove mock_resource overrides if OpenTofu adds type-aware mock generation
 
-# L3 providers — only for root-level resources (ingress LB, DNS record)
+# DECISION: Only two mock providers — hcloud + rancher2.
+# Why: kubectl provider was eliminated. All L4 resources (NodeDriver, UIPlugin)
+#      are deployed via cloud-init manifests. Only hcloud (for _ingress_lb
+#      submodule) and rancher2 (for rancher2_bootstrap) need mocking.
 mock_provider "hcloud" {
   mock_resource "hcloud_load_balancer" {
     defaults = {
@@ -62,7 +62,6 @@ mock_provider "hcloud" {
   }
 }
 
-mock_provider "kubectl" {}
 mock_provider "rancher2" {}
 
 # DECISION: Override module.rke2_cluster (wrapper) with mock outputs matching rke2-core API.

@@ -41,4 +41,15 @@ check "letsencrypt_requires_email" {
   }
 }
 
+# ── BYO Ingress LB requires hostname or IP ──────────────────────────────────
 
+# DECISION: Guardrail for BYO ingress LB — must provide hostname or IP.
+# Why: When create_ingress_lb = false, auto-hostname generation needs an IP
+#      (existing_ingress_lb_ipv4) or the user must provide rancher_hostname
+#      directly. Without either, the hostname would be empty/invalid.
+check "byo_ingress_lb_requires_hostname_or_ip" {
+  assert {
+    condition     = var.create_ingress_lb || var.rancher_hostname != "" || var.existing_ingress_lb_ipv4 != ""
+    error_message = "When create_ingress_lb = false, you must provide either rancher_hostname or existing_ingress_lb_ipv4 for hostname resolution."
+  }
+}

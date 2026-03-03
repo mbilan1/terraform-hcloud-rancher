@@ -1,21 +1,16 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Rancher child module — required providers
 #
-# DECISION: Declare required_providers for all providers used in this module.
-# Why: OpenTofu requires child modules to declare which providers they use
-#      so it can correctly pass through provider configurations from the root.
-#      The root module configures all provider {} blocks; this module only
-#      declares version constraints.
+# DECISION: Only rancher2 provider — kubectl removed.
+# Why: NodeDriver and UIPlugin are now deployed via raw YAML manifests in
+#      cloud-init (RKE2 deploy controller). The only operation requiring a
+#      Terraform provider is rancher2_bootstrap (admin password setup).
 # ──────────────────────────────────────────────────────────────────────────────
 
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.8.0"
 
   required_providers {
-    kubectl = {
-      source  = "alekc/kubectl"
-      version = ">= 2.0.0"
-    }
     rancher2 = {
       source  = "rancher/rancher2"
       version = ">= 13.0.0"

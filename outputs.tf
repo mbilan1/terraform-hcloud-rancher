@@ -42,7 +42,7 @@ output "initial_master_ipv4" {
 
 output "ingress_lb_ipv4" {
   description = "IPv4 address of the ingress load balancer (Rancher UI). Point DNS A record here."
-  value       = hcloud_load_balancer.ingress.ipv4
+  value       = local.effective_lb_ipv4
 }
 
 output "network_id" {

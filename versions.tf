@@ -8,18 +8,12 @@
 #      Acceptable for a module that provisions production infrastructure.
 # See: docs/ARCHITECTURE.md — Provider Flow
 #
-# DECISION: hcloud declared in root even though the rke2-cluster child module
-#      has its own hcloud provider configuration internally.
-# Why: The root module creates the ingress LB directly. This resource needs
-#      the provider configured in the root scope.
-#      The rke2-cluster child module uses its OWN hcloud instance internally
-#      (anti-pattern inherited from terraform-hcloud-ubuntu-rke2 which was
-#      designed as a root module, not a child).
-#
-# DECISION: AWS provider removed.
-# Why: Route53 DNS management was removed. DNS is now the operator's
-#      responsibility — point the A-record for rancher_hostname to the
-#      ingress_lb_ipv4 output.
+# DECISION: Only two providers: hcloud + rancher2.
+# Why: cert-manager, Rancher, NodeDriver, and UIPlugin are all deployed via
+#      RKE2 cloud-init manifests (HelmChart CRDs + raw YAML). This eliminates
+#      the need for helm, kubernetes, and kubectl providers entirely.
+#      The only L4 provider needed is rancher2 for the initial admin bootstrap.
+# See: providers.tf for rationale
 # ──────────────────────────────────────────────────────────────────────────────
 
 terraform {
@@ -29,29 +23,19 @@ terraform {
   required_version = ">= 1.8.0"
 
   required_providers {
-    # ── L3: Infrastructure providers ──────────────────────────────────────────
-    # NOTE: rke2-core is a proper module \u2014 it declares hcloud in its own versions.tf
+    # ── L3: Infrastructure provider ───────────────────────────────────────────
+    # NOTE: rke2-core is a proper module — it declares hcloud in its own versions.tf
     #       but does NOT configure a provider {} block. Provider configuration
     #       flows down from the root module (standard OpenTofu pattern).
-    #       There are no more version conflicts with a second hcloud declaration.
 
     hcloud = {
       source  = "hetznercloud/hcloud"
       version = "= 1.60.1"
     }
 
-    # ── L4: Kubernetes management providers ───────────────────────────────────
-    # NOTE: helm and kubernetes providers REMOVED — cert-manager and Rancher are
-    #       now deployed via RKE2 HelmChart CRDs placed in cloud-init manifests.
-    #       Only kubectl (via Rancher proxy) and rancher2 (bootstrap mode) remain.
-    # See: providers.tf for rationale
-
-    kubectl = {
-      source  = "alekc/kubectl"
-      version = "= 2.1.3"
-    }
-
-    # ── Rancher management ────────────────────────────────────────────────────
+    # ── L4: Rancher management provider ───────────────────────────────────────
+    # NOTE: Used only for rancher2_bootstrap (initial admin password + token).
+    #       Bootstrap mode — no auth token required, just polls the Rancher URL.
 
     rancher2 = {
       source  = "rancher/rancher2"
@@ -69,8 +53,8 @@ terraform {
 # | Provider              | Source                  | Version   | Updated    |
 # |-----------------------|-------------------------|-----------|------------|
 # | hcloud                | hetznercloud/hcloud     | 1.60.1    | 2026-02-26 |
-# | kubectl               | alekc/kubectl           | 2.1.3     | 2026-02-26 |
 # | rancher2              | rancher/rancher2        | 13.1.4    | 2026-02-26 |
+# | kubectl (REMOVED)     | alekc/kubectl           | -         | 2026-03-04 |
 # | helm (REMOVED)        | hashicorp/helm          | -         | 2026-03-02 |
 # | kubernetes (REMOVED)  | hashicorp/kubernetes    | -         | 2026-03-02 |
 # ──────────────────────────────────────────────────────────────────────────────

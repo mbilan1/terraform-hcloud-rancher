@@ -118,6 +118,34 @@ variable "install_hetzner_driver" {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Ingress Load Balancer (BYO pattern)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# DECISION: BYO pattern for ingress LB — create or use existing.
+# Why: Follows the composable-primitive pattern from terraform-hcloud-rke2-core.
+#      Production teams may pre-provision load balancers with specific IPs,
+#      use external LB solutions, or share an LB across services.
+# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-003-dual-load-balancer.md
+variable "create_ingress_lb" {
+  description = "Create a Hetzner ingress load balancer for Rancher UI (ports 80/443). Set to false when using a pre-existing or external load balancer."
+  type        = bool
+  nullable    = false
+  default     = true
+}
+
+variable "existing_ingress_lb_ipv4" {
+  description = "IPv4 address of an existing ingress load balancer. Only used when create_ingress_lb = false. If set, auto-generates hostname from this IP (unless rancher_hostname is provided)."
+  type        = string
+  nullable    = false
+  default     = ""
+
+  validation {
+    condition     = var.existing_ingress_lb_ipv4 == "" || can(regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", var.existing_ingress_lb_ipv4))
+    error_message = "existing_ingress_lb_ipv4 must be a valid IPv4 address or empty."
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  Cluster infrastructure
 # ═══════════════════════════════════════════════════════════════════════════════
 
