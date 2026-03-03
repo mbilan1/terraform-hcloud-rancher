@@ -43,11 +43,6 @@ mock_provider "hcloud" {
       id = "10002"
     }
   }
-  mock_resource "hcloud_firewall" {
-    defaults = {
-      id = "20001"
-    }
-  }
   mock_resource "hcloud_server" {
     defaults = {
       id           = "30001"
@@ -90,8 +85,6 @@ override_module {
   outputs = {
     network_id                           = "10001"
     network_subnet_id                    = "10002"
-    firewall_control_plane_ids           = ["20001"]
-    firewall_worker_ids                  = ["20002"]
     control_plane_server_ids             = { "cp-0" = "30001" }
     control_plane_ipv4_addresses         = { "cp-0" = "1.2.3.4" }
     control_plane_private_ipv4_addresses = { "cp-0" = "10.0.1.1" }
@@ -116,15 +109,6 @@ override_module {
     network_id          = "10001"
     subnet_id           = "10002"
     hcloud_network_cidr = "10.0.0.0/16"
-  }
-}
-
-override_module {
-  target = module.rke2_cluster.module.cluster.module.firewall
-
-  outputs = {
-    control_plane_firewall_ids = ["20001"]
-    worker_firewall_ids        = ["20002"]
   }
 }
 
@@ -421,23 +405,7 @@ run "rke2_version_accepts_rke2_format" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V09: k8s_api_allowed_cidrs — must not be empty                        ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-run "k8s_api_cidrs_rejects_empty_list" {
-  command = plan
-
-  variables {
-    hcloud_api_token      = "mock-token"
-    rancher_hostname      = "rancher.example.com"
-    admin_password        = "SecurePassword123"
-    k8s_api_allowed_cidrs = []
-  }
-
-  expect_failures = [var.k8s_api_allowed_cidrs]
-}
-
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V10: hcloud_network_cidr — must be valid CIDR                         ║
+# ║  UT-V09: hcloud_network_cidr — must be valid CIDR                         ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "network_cidr_rejects_invalid" {
   command = plan
@@ -453,7 +421,7 @@ run "network_cidr_rejects_invalid" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  UT-V11: hcloud_network_zone — must be one of allowed zones               ║
+# ║  UT-V10: hcloud_network_zone — must be one of allowed zones               ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "network_zone_rejects_invalid" {
   command = plan

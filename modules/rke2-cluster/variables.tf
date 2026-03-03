@@ -6,7 +6,8 @@
 #      - hcloud_api_token removed: rke2-core uses providers from root (proper module)
 #      - cluster_domain removed: rke2-core is Zero-SSH, no cert-manager, no DNS
 #      - load_balancer_location removed: rke2-core does not create LBs (ADR-003)
-#      - ssh_allowed_cidrs removed: rke2-core is Zero-SSH (ADR-002), no port 22 rule
+#      - ssh_allowed_cidrs removed: rke2-core is Zero-SSH (ADR-002)
+#      - k8s_api_allowed_cidrs removed: firewalls are BYO (ADR-006)
 #      - enable_secrets_encryption removed: not exposed by rke2-core
 #      - kubernetes_version renamed to rke2_version: matches rke2-core API
 # See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-002-true-zero-ssh.md
@@ -63,15 +64,6 @@ variable "hcloud_network_zone" {
   description = "Hetzner network zone"
   type        = string
   default     = "eu-central"
-  nullable    = false
-}
-
-# ── Security ─────────────────────────────────────────────────────────────────
-
-variable "k8s_api_allowed_cidrs" {
-  description = "CIDR blocks allowed for K8s API access (port 6443)"
-  type        = list(string)
-  default     = ["0.0.0.0/0", "::/0"]
   nullable    = false
 }
 

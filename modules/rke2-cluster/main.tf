@@ -41,9 +41,6 @@ module "cluster" {
   hcloud_network_cidr = var.hcloud_network_cidr
   subnet_address      = var.subnet_address
 
-  # ── Security ─────────────────────────────────────────────────────────────
-  k8s_api_allowed_cidrs = var.k8s_api_allowed_cidrs
-
   # ── RKE2 ─────────────────────────────────────────────────────────────────
   rke2_version = var.rke2_version
 

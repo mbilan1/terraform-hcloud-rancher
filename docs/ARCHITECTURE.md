@@ -135,7 +135,7 @@ terraform-hcloud-rancher/                # Root module (shim)
 
 | Layer | Component | Responsibility | Tools |
 |:-----:|-----------|----------------|-------|
-| L3 | `modules/rke2-cluster/` | Hetzner Cloud infrastructure (servers, network, LB, firewall) | OpenTofu via `terraform-hcloud-ubuntu-rke2` |
+| L3 | `modules/rke2-cluster/` | Hetzner Cloud infrastructure (servers, network, LB) | OpenTofu via `terraform-hcloud-rke2-core` |
 | L4 | `modules/rancher/` | cert-manager + Rancher Helm install + bootstrap + Node Driver | OpenTofu (helm, kubernetes, rancher2 providers) |
 | Shim | Root (`/`) | Variable routing, provider config, output wiring | OpenTofu |
 
@@ -182,10 +182,6 @@ flowchart TB
         subgraph lb_layer["Load Balancers"]
             cp_lb["Control Plane LB\nlb11\n6443 / 9345"]
             ingress_lb["Ingress LB\nlb11\n80 / 443"]
-        end
-
-        subgraph fw["Firewall"]
-            cluster_fw["Cluster Firewall\n80, 443 (public)\n6443 (configurable CIDR)\nSSH (configurable CIDR)"]
         end
 
         subgraph mgmt["Management Node"]
@@ -239,7 +235,7 @@ flowchart LR
     subgraph phase1["Phase 1: Infrastructure"]
         direction TB
         rke2["module.rke2_cluster\n(terraform-hcloud-ubuntu-rke2)"]
-        net["Network + Firewall"]
+        net["Network"]
         srv["Server (cx43)"]
         lb["Load Balancers"]
         kc["kubeconfig"]
@@ -267,11 +263,10 @@ flowchart LR
 ### Phase 1: Infrastructure (terraform-hcloud-ubuntu-rke2)
 
 1. **Network** — private network `10.0.0.0/16` with subnet `10.0.1.0/24`
-2. **Firewall** — cluster-wide rules (SSH, API, HTTP/S)
-3. **SSH key** — auto-generated ED25519 key pair
-4. **Load balancers** — control-plane LB + ingress LB
-5. **Management node** — single cx43 server, RKE2 via cloud-init
-6. **kubeconfig** — fetched after cluster is ready
+2. **SSH key** — auto-generated ED25519 key pair (optional, BYO SSH)
+3. **Load balancers** — control-plane LB + ingress LB
+4. **Management node** — single cx43 server, RKE2 via cloud-init
+5. **kubeconfig** — fetched after cluster is ready
 
 ```hcl
 module "rke2_cluster" {
@@ -522,7 +517,7 @@ flowchart LR
 
 | Control | Implementation | Status |
 |---------|---------------|--------|
-| Cloud Firewall | Hetzner Cloud Firewall with configurable CIDRs | ✅ Via terraform-hcloud-ubuntu-rke2 |
+| Cloud Firewall | Hetzner Cloud Firewall (BYO — consumer creates and passes IDs) | ✅ Via `firewall_ids` variable (ADR-006) |
 | Private network | Inter-node traffic on 10.0.0.0/16 | ✅ Via terraform-hcloud-ubuntu-rke2 |
 | Project isolation | Separate Hetzner Cloud Project per downstream cluster | ✅ Design-level |
 | No SSH | Cloud-init only bootstrap, no SSH provisioners | ✅ Implemented |
@@ -695,7 +690,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 ### Mid-term (hardening)
 
 - [ ] HA management cluster (3 nodes)
-- [ ] Restricted firewall CIDRs for management
+- [ ] BYO firewall example for management cluster (ADR-006)
 - [ ] Rancher backup/restore configuration
 - [ ] Monitoring stack on management cluster
 - [ ] tests/ — variable validation, guardrails

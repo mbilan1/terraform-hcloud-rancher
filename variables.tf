@@ -155,7 +155,7 @@ variable "existing_ingress_lb_ipv4" {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 variable "cluster_name" {
-  description = "Identifier prefix for all provisioned resources (servers, LBs, network, firewall). Must be lowercase alphanumeric, max 20 characters."
+  description = "Identifier prefix for all provisioned resources (servers, LBs, network). Must be lowercase alphanumeric, max 20 characters."
   type        = string
   nullable    = false
   default     = "rancher"
@@ -241,26 +241,11 @@ variable "hcloud_network_zone" {
 #  Security / Access control
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# DECISION: ssh_allowed_cidrs removed.
-# Why: rke2-core is Zero-SSH (ADR-002). No port 22 firewall rules are created.
-#      Operators who need SSH access bring their own Hetzner SSH keys via rke2-core's
-#      ssh_key_ids variable and manage firewall rules separately.
-variable "k8s_api_allowed_cidrs" {
-  description = "CIDR blocks allowed to access the Kubernetes API (port 6443). Default: open."
-  type        = list(string)
-  nullable    = false
-  default     = ["0.0.0.0/0", "::/0"]
-
-  validation {
-    condition     = length(var.k8s_api_allowed_cidrs) > 0
-    error_message = "k8s_api_allowed_cidrs must contain at least one CIDR block."
-  }
-
-  validation {
-    condition     = alltrue([for c in var.k8s_api_allowed_cidrs : can(cidrsubnet(c, 0, 0))])
-    error_message = "All k8s_api_allowed_cidrs entries must be valid CIDR blocks."
-  }
-}
+# DECISION: ssh_allowed_cidrs and k8s_api_allowed_cidrs removed.
+# Why: Firewalls are BYO (ADR-006). rke2-core no longer creates firewalls.
+#      Operators manage firewalls externally — a separate composable firewall
+#      module will handle rules for SSH, K8s API, and ingress ports.
+#      ssh_key access is also BYO via rke2-core's ssh_key_ids variable.
 
 # DECISION: enable_secrets_encryption removed.
 # Why: rke2-core does not expose this variable. Secrets encryption is

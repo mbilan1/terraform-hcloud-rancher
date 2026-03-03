@@ -219,9 +219,6 @@ module "rke2_cluster" {
   subnet_address      = var.subnet_address
   hcloud_network_zone = var.hcloud_network_zone
 
-  # Security
-  k8s_api_allowed_cidrs = var.k8s_api_allowed_cidrs
-
   # RKE2
   rke2_version = var.rke2_version
 
