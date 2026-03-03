@@ -197,8 +197,8 @@ flowchart TB
         end
     end
 
-    subgraph aws["AWS"]
-        r53["Route53\n*.rancher.domain\n→ Ingress LB"]
+    subgraph dns["DNS (BYO or sslip.io)"]
+        resolver["sslip.io (default)\nor Route53 / Cloudflare\n→ Ingress LB"]
     end
 
     subgraph letsencrypt["Let's Encrypt"]
@@ -212,7 +212,7 @@ flowchart TB
     ingress_lb --> node
     node --- subnet
 
-    r53 -.->|"DNS"| ingress_lb
+    resolver -.->|"DNS"| ingress_lb
     acme -.->|"TLS"| ingress_lb
 ```
 

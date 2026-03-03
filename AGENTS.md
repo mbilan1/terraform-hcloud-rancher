@@ -11,12 +11,12 @@
 **Before making ANY change**, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) in full.
 
 It contains:
-- Two-phase deployment flow (L3 infrastructure → L4 Rancher)
-- Dual load balancer design
-- Provider flow (6 providers, bootstrap mode)
-- Hetzner Node Driver integration
+- Deployment flow (L3 infrastructure + L4 via cloud-init + bootstrap)
+- Dual load balancer design (BYO ingress LB)
+- Provider flow (2 providers: hcloud + rancher2)
+- Hetzner Node Driver integration (cloud-init manifests)
 - Compromise Log with deliberate trade-offs
-- Security model and known gaps
+- Security model (True Zero-SSH)
 
 **If you skip ARCHITECTURE.md, you WILL break something.**
 
@@ -26,12 +26,13 @@ It contains:
 
 An **OpenTofu/Terraform module** (NOT a root deployment) that deploys a **Rancher management cluster on Hetzner Cloud** with Hetzner Node Driver for downstream cluster provisioning.
 
-- **IaC tool**: OpenTofu >= 1.7.0 — always use `tofu`, **never** `terraform`
+- **IaC tool**: OpenTofu >= 1.8.0 — always use `tofu`, **never** `terraform`
 - **Cloud provider**: Hetzner Cloud (EU data centers: Helsinki, Nuremberg, Falkenstein)
-- **Kubernetes distribution**: RKE2 (via the `terraform-hcloud-rke2` module)
-- **Management plane**: Rancher (cert-manager + Helm chart + bootstrap)
+- **Kubernetes distribution**: RKE2 (via the `terraform-hcloud-rke2-core` module)
+- **Management plane**: Rancher (cert-manager + Rancher via cloud-init HelmChart CRDs + rancher2_bootstrap)
 - **OS**: Ubuntu 24.04 LTS
-- **DNS**: AWS Route53 (optional)
+- **DNS**: sslip.io by default, BYO DNS (Route53, Cloudflare, etc.) via `rancher_hostname`
+- **Providers**: 2 only — `hcloud` + `rancher2` (no helm, kubernetes, kubectl, or aws)
 - **Status**: Experimental — under active development
 
 ---
@@ -74,35 +75,36 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that deploys a **Ranche
 
 ## Repository Structure
 
-### Root Terraform Files (Shim Layer)
+### Root Terraform Files (Facade Layer)
 
 | File | Purpose |
-|------|---------|
-| `main.tf` | Module calls (rke2_cluster + rancher) + ingress LB + DNS |
-| `providers.tf` | Provider configs (hcloud, aws, helm, kubernetes, kubectl, rancher2) |
+|------|---------||
+| `main.tf` | BYO LB + cloud-init manifests + module calls (rke2_cluster + rancher) |
+| `providers.tf` | Provider configs (hcloud + rancher2 only) |
 | `variables.tf` | All user-facing input variables |
-| `outputs.tf` | Module outputs rewired from child modules |
+| `outputs.tf` | Module outputs |
 | `versions.tf` | Provider version constraints + VERSION REGISTRY table |
 | `guardrails.tf` | Preflight `check {}` blocks |
+| `moved.tf` | State migration blocks (singleton → for_each) |
 
 ### Child Modules
 
 #### `modules/rke2-cluster/` — L3 Infrastructure
 
-Thin wrapper around `terraform-hcloud-rke2` that:
-- Sources the rke2 module with management-cluster-specific defaults
-- Hardcodes `harmony_enabled = false`, `agent_node_count = 0`, `cloud_provider_external = false`
-- Exposes kubeconfig outputs for L4 provider configuration
+Thin wrapper around `terraform-hcloud-rke2-core` that:
+- Sources rke2-core with management-cluster-specific defaults
+- Passes `extra_server_manifests` for L4 software (cert-manager, Rancher, NodeDriver, UIPlugin)
+- Sets `delete_protection = true` for production safety
+- Outputs: `network_id`, `initial_master_ipv4`, `cluster_ready`
 
-#### `modules/rancher/` — L4 Kubernetes Management
+#### `modules/rancher/` — L4 Rancher Bootstrap
 
 | File | Purpose |
-|------|---------|
-| `main.tf` | cert-manager Helm + Rancher Helm + rancher2_bootstrap |
-| `node-driver.tf` | Hetzner NodeDriver CRD + UIPlugin CRD |
-| `variables.tf` | Rancher-specific inputs |
-| `outputs.tf` | rancher_url, admin_token |
-| `versions.tf` | required_providers (helm, kubernetes, kubectl, rancher2) |
+|------|---------||
+| `main.tf` | `rancher2_bootstrap` only (admin password, server URL, telemetry) |
+| `variables.tf` | `rancher_hostname` + `admin_password` |
+| `outputs.tf` | `admin_token` |
+| `versions.tf` | `required_providers` (rancher2 only) |
 
 ### Other Directories
 
@@ -116,26 +118,33 @@ Thin wrapper around `terraform-hcloud-rke2` that:
 
 ## Architecture Constraints
 
-### Two-Phase Deployment
+### Deployment Flow
 ```
-Phase 1 (L3): module.rke2_cluster → Hetzner infra + RKE2 bootstrap → kubeconfig
-Phase 2 (L4): module.rancher → cert-manager + Rancher Helm + bootstrap + NodeDriver
+L3: module.rke2_cluster → Hetzner infra + RKE2 + cloud-init manifests (cert-manager, Rancher, NodeDriver, UIPlugin)
+L4: module.rancher → rancher2_bootstrap (admin password + server URL)
 ```
+All L4 software is deployed via cloud-init HelmChart CRDs and raw manifests — no helm/kubernetes/kubectl providers.
 
-### Provider Flow (CRITICAL)
-- L4 providers (helm, kubernetes, kubectl, rancher2) are configured with **outputs** from `module.rke2_cluster`
-- This creates an apparent cyclic dependency but OpenTofu resolves it via deferred initialization
-- The rancher2 provider runs in **bootstrap mode** (`bootstrap = true`, `insecure = true`)
+### Provider Model (2 providers only)
+- **hcloud**: Hetzner Cloud infrastructure (servers, LBs, networks, firewalls)
+- **rancher2**: Bootstrap mode only (`bootstrap = true`, `insecure = true`) — sets admin password
+- No helm, kubernetes, kubectl, or aws providers
 
-### Dual Load Balancer
-- **Control-plane LB**: Created by rke2 module (ports 6443, 9345)
-- **Ingress LB**: Created in root `main.tf` (ports 80, 443 for Rancher UI)
-- Do NOT merge them.
+### DNS / Hostname
+- **Default**: sslip.io auto-hostname from ingress LB IP (zero DNS setup)
+- **Production**: Pass `rancher_hostname` with a real FQDN (Route53, Cloudflare, etc.)
+- DNS is **BYO** — the module does NOT manage DNS records
+
+### Dual Load Balancer (BYO pattern)
+- **Control-plane LB**: Created by rke2-core (ports 6443, 9345)
+- **Ingress LB**: Created in root `main.tf` with `for_each` gating (ports 80, 443 for Rancher UI)
+- Set `create_ingress_lb = false` + `existing_ingress_lb_ipv4` for BYO
+- Do NOT merge them (ADR-003).
 
 ### RKE2 Module Dependency
-- `modules/rke2-cluster/main.tf` sources `terraform-hcloud-ubuntu-rke2` via **git** (`git::https://github.com/mbilan1/terraform-hcloud-ubuntu-rke2.git`)
-- Pin to a release tag (`?ref=v1.0.0`) when available for reproducibility
-- The rke2 module brings its own providers (known anti-pattern) — version pins in `versions.tf` MUST match
+- `modules/rke2-cluster/main.tf` sources `terraform-hcloud-rke2-core` (local path during dev)
+- rke2-core is a proper module — no internal provider blocks, pure L3
+- True Zero-SSH: no SSH keys, no port 22, no kubeconfig output (ADR-002)
 
 ---
 
