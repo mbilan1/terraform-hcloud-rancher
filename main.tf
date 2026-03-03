@@ -47,7 +47,7 @@ locals {
 #      Keeping the LB resource inline breaks the cycle: the LB is created
 #      independently, then the network attachment (which needs rke2_cluster's
 #      network_id) is created with an explicit depends_on.
-# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-003-dual-load-balancer.md
+# See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-003-dual-load-balancer.md
 locals {
   # DECISION: Derive create flag from both create_ingress_lb and existing_ipv4.
   # Why: Same pattern as rke2-core _network module — the presence of an existing
@@ -156,7 +156,7 @@ locals {
     #      This is the same limitation as cert-manager/Rancher version changes.
     #      For in-place updates, operators can manually place manifests on disk
     #      or use the Rancher API.
-    # See: /home/mbilan/workdir/rke2-hetzner-architecture/investigations/inv-002-hetzner-machine-driver.md
+    # See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/investigations/inv-002-hetzner-machine-driver.md
     var.install_hetzner_driver ? {
       "10-hetzner-node-driver.yaml" = yamlencode({
         apiVersion = "management.cattle.io/v3"
@@ -243,7 +243,7 @@ module "rke2_cluster" {
 #       Only the network attachment and targets depend on rke2_cluster
 #       (they need network_id). This avoids a dependency cycle:
 #         LB IP → hostname → manifests → rke2_cluster → network → LB network
-# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-003-dual-load-balancer.md
+# See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-003-dual-load-balancer.md
 
 resource "hcloud_load_balancer" "ingress" {
   for_each = local.create_ingress_lb ? { main = true } : {}

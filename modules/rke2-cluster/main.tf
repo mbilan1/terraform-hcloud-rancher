@@ -7,7 +7,7 @@
 #        - Pure L3 (no addons, no kubeconfig, no HCCM) — correct scope for this module
 #        - Proper module design — uses providers from root, no internal provider {} blocks
 #        - for_each over count — stable node identity
-# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-002-true-zero-ssh.md
+# See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-002-true-zero-ssh.md
 #
 # DECISION: Source is a local path to sibling repository.
 # Why: rke2-core lives at the same workdir level. Local path avoids git fetch

@@ -130,7 +130,7 @@ variable "install_hetzner_driver" {
 # Why: Follows the composable-primitive pattern from terraform-hcloud-rke2-core.
 #      Production teams may pre-provision load balancers with specific IPs,
 #      use external LB solutions, or share an LB across services.
-# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-003-dual-load-balancer.md
+# See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-003-dual-load-balancer.md
 variable "create_ingress_lb" {
   description = "Create a Hetzner ingress load balancer for Rancher UI (ports 80/443). Set to false when using a pre-existing or external load balancer."
   type        = bool

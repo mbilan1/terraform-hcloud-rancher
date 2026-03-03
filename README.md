@@ -27,7 +27,8 @@ An **OpenTofu/Terraform module** that deploys a production-oriented **Rancher ma
 
 ```hcl
 module "rancher" {
-  source = "github.com/<owner>/terraform-hcloud-rancher"
+  source  = "mbilan1/rancher/hcloud"
+  version = "~> 0.1"
 
   hcloud_api_token = var.hcloud_api_token
   admin_password   = var.admin_password
@@ -52,7 +53,8 @@ For production, bring your own DNS (Route53, Cloudflare, or any provider):
 
 ```hcl
 module "rancher" {
-  source = "github.com/<owner>/terraform-hcloud-rancher"
+  source  = "mbilan1/rancher/hcloud"
+  version = "~> 0.1"
 
   hcloud_api_token = var.hcloud_api_token
   rancher_hostname = "rancher.example.com"  # Your R53/Cloudflare managed FQDN
@@ -119,12 +121,7 @@ terraform-hcloud-rancher/
 | Name | Version |
 |------|---------|
 | <a name="provider_hcloud"></a> [hcloud](#provider\_hcloud) | 1.60.1 |
-### Modules
-
-| Name | Source |
-|------|--------|
-| <a name="module_rke2_cluster"></a> [rke2\_cluster](#module\_rke2\_cluster) | ./modules/rke2-cluster |
-| <a name="module_rancher"></a> [rancher](#module\_rancher) | ./modules/rancher |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.8.1 |
 ### Resources
 
 | Name | Type |
@@ -134,14 +131,15 @@ terraform-hcloud-rancher/
 | [hcloud_load_balancer_service.http](https://registry.terraform.io/providers/hetznercloud/hcloud/1.60.1/docs/resources/load_balancer_service) | resource |
 | [hcloud_load_balancer_service.https](https://registry.terraform.io/providers/hetznercloud/hcloud/1.60.1/docs/resources/load_balancer_service) | resource |
 | [hcloud_load_balancer_target.ingress](https://registry.terraform.io/providers/hetznercloud/hcloud/1.60.1/docs/resources/load_balancer_target) | resource |
+| [random_password.admin](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 ### Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | Initial password for the Rancher 'admin' user. Must be at least 12 characters. Change immediately after first login. | `string` | n/a | yes |
 | <a name="input_hcloud_api_token"></a> [hcloud\_api\_token](#input\_hcloud\_api\_token) | Hetzner Cloud API token for the management project (read/write access required) | `string` | n/a | yes |
+| <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | Initial password for the Rancher 'admin' user. Leave empty to auto-generate a secure random password (output as rancher\_admin\_password). | `string` | `""` | no |
 | <a name="input_cert_manager_version"></a> [cert\_manager\_version](#input\_cert\_manager\_version) | cert-manager Helm chart version to install. | `string` | `"1.17.2"` | no |
-| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Identifier prefix for all provisioned resources (servers, LBs, network, firewall). Must be lowercase alphanumeric, max 20 characters. | `string` | `"rancher"` | no |
+| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Identifier prefix for all provisioned resources (servers, LBs, network). Must be lowercase alphanumeric, max 20 characters. | `string` | `"rancher"` | no |
 | <a name="input_control_plane_server_type"></a> [control\_plane\_server\_type](#input\_control\_plane\_server\_type) | Hetzner Cloud server type for management cluster nodes. Minimum cx43 (8 vCPU, 16 GB) for Rancher. | `string` | `"cx43"` | no |
 | <a name="input_create_ingress_lb"></a> [create\_ingress\_lb](#input\_create\_ingress\_lb) | Create a Hetzner ingress load balancer for Rancher UI (ports 80/443). Set to false when using a pre-existing or external load balancer. | `bool` | `true` | no |
 | <a name="input_existing_ingress_lb_ipv4"></a> [existing\_ingress\_lb\_ipv4](#input\_existing\_ingress\_lb\_ipv4) | IPv4 address of an existing ingress load balancer. Only used when create\_ingress\_lb = false. If set, auto-generates hostname from this IP (unless rancher\_hostname is provided). | `string` | `""` | no |
@@ -149,7 +147,6 @@ terraform-hcloud-rancher/
 | <a name="input_hcloud_network_zone"></a> [hcloud\_network\_zone](#input\_hcloud\_network\_zone) | Hetzner network zone encompassing all node locations. | `string` | `"eu-central"` | no |
 | <a name="input_hetzner_driver_version"></a> [hetzner\_driver\_version](#input\_hetzner\_driver\_version) | Version of zsys-studio/rancher-hetzner-cluster-provider to install as Rancher Node Driver. | `string` | `"0.8.0"` | no |
 | <a name="input_install_hetzner_driver"></a> [install\_hetzner\_driver](#input\_install\_hetzner\_driver) | Install the zsys-studio Hetzner Node Driver and UI Extension. Set to false if managing the driver separately. | `bool` | `true` | no |
-| <a name="input_k8s_api_allowed_cidrs"></a> [k8s\_api\_allowed\_cidrs](#input\_k8s\_api\_allowed\_cidrs) | CIDR blocks allowed to access the Kubernetes API (port 6443). Default: open. | `list(string)` | <pre>[<br/>  "0.0.0.0/0",<br/>  "::/0"<br/>]</pre> | no |
 | <a name="input_letsencrypt_email"></a> [letsencrypt\_email](#input\_letsencrypt\_email) | Email address for Let's Encrypt certificate registration. Required when tls\_source = 'letsEncrypt', ignored otherwise. | `string` | `""` | no |
 | <a name="input_management_node_count"></a> [management\_node\_count](#input\_management\_node\_count) | Number of control-plane nodes for the management cluster. Use 1 for dev/test, 3 for HA production. | `number` | `1` | no |
 | <a name="input_node_location"></a> [node\_location](#input\_node\_location) | Primary Hetzner datacenter location for management cluster nodes (e.g. 'hel1', 'nbg1', 'fsn1'). | `string` | `"hel1"` | no |
@@ -165,6 +162,7 @@ terraform-hcloud-rancher/
 | <a name="output_ingress_lb_ipv4"></a> [ingress\_lb\_ipv4](#output\_ingress\_lb\_ipv4) | IPv4 address of the ingress load balancer (Rancher UI). Point DNS A record here. |
 | <a name="output_initial_master_ipv4"></a> [initial\_master\_ipv4](#output\_initial\_master\_ipv4) | Public IPv4 of the initial master (control-plane node that bootstrapped the cluster) |
 | <a name="output_network_id"></a> [network\_id](#output\_network\_id) | Hetzner Cloud private network ID (for cluster template pre-fill — ADR-005) |
+| <a name="output_rancher_admin_password"></a> [rancher\_admin\_password](#output\_rancher\_admin\_password) | Rancher admin password (auto-generated if not provided). Use to log in at rancher\_url. |
 | <a name="output_rancher_admin_token"></a> [rancher\_admin\_token](#output\_rancher\_admin\_token) | Rancher admin API token for initial configuration. Treat as a secret. |
 | <a name="output_rancher_hostname"></a> [rancher\_hostname](#output\_rancher\_hostname) | Effective Rancher hostname (auto-generated from LB IP if not provided) |
 | <a name="output_rancher_url"></a> [rancher\_url](#output\_rancher\_url) | Rancher UI URL (HTTPS) |

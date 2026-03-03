@@ -10,7 +10,7 @@
 #      - k8s_api_allowed_cidrs removed: firewalls are BYO (ADR-006)
 #      - enable_secrets_encryption removed: not exposed by rke2-core
 #      - kubernetes_version renamed to rke2_version: matches rke2-core API
-# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-002-true-zero-ssh.md
+# See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-002-true-zero-ssh.md
 # ──────────────────────────────────────────────────────────────────────────────
 
 # ── Cluster identity ─────────────────────────────────────────────────────────

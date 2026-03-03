@@ -8,7 +8,7 @@
 #        - network_id: ingress LB network attachment
 #        - initial_master_ipv4: K8s API endpoint for L4 providers
 #        - cluster_ready: explicit dependency anchor for module.rancher
-# See: /home/mbilan/workdir/rke2-hetzner-architecture/decisions/adr-003-dual-load-balancer.md
+# See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-003-dual-load-balancer.md
 # ──────────────────────────────────────────────────────────────────────────────
 
 output "network_id" {
