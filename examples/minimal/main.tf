@@ -30,7 +30,7 @@ module "rancher_management" {
   # Why: Auto-generates "rancher.<LB-IP>.sslip.io" from the ingress LB IP,
   #      enabling single `tofu apply` without pre-existing DNS.
   #      For production, set rancher_hostname to a real FQDN.
-  admin_password = var.admin_password
+  # NOTE: admin_password left empty — auto-generated. See rancher_admin_password output.
 
   # DECISION: Use self-signed TLS for minimal example.
   # Why: Does not require a real domain, valid email, or public DNS.
@@ -73,5 +73,11 @@ output "initial_master_ipv4" {
 output "rancher_admin_token" {
   description = "Rancher admin API token (sensitive)"
   value       = module.rancher_management.rancher_admin_token
+  sensitive   = true
+}
+
+output "rancher_admin_password" {
+  description = "Rancher admin password (auto-generated)"
+  value       = module.rancher_management.rancher_admin_password
   sensitive   = true
 }

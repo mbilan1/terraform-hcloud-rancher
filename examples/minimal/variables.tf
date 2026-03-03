@@ -8,8 +8,5 @@ variable "hcloud_api_token" {
   sensitive   = true
 }
 
-variable "admin_password" {
-  description = "Initial password for the Rancher 'admin' user. Minimum 12 characters."
-  type        = string
-  sensitive   = true
-}
+# NOTE: admin_password is no longer required — the module auto-generates one.
+# Override: export TF_VAR_admin_password="your-password" (min 12 chars)

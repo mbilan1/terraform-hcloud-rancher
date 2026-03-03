@@ -49,14 +49,19 @@ variable "rancher_version" {
 }
 
 variable "admin_password" {
-  description = "Initial password for the Rancher 'admin' user. Must be at least 12 characters. Change immediately after first login."
+  # DECISION: Optional — auto-generates a random 24-char password when empty.
+  # Why: Eliminates the manual input prompt during `tofu apply`. The generated
+  #      password is exposed via the `rancher_admin_password` output (sensitive).
+  #      For CI/CD pipelines, pass a specific password via TF_VAR_admin_password.
+  description = "Initial password for the Rancher 'admin' user. Leave empty to auto-generate a secure random password (output as rancher_admin_password)."
   type        = string
   nullable    = false
   sensitive   = true
+  default     = ""
 
   validation {
-    condition     = length(var.admin_password) >= 12
-    error_message = "admin_password must be at least 12 characters for security."
+    condition     = var.admin_password == "" || length(var.admin_password) >= 12
+    error_message = "admin_password must be at least 12 characters (or empty for auto-generation)."
   }
 }
 

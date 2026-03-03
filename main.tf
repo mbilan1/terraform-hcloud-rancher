@@ -13,6 +13,29 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  Admin Password — auto-generate if not provided                            ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# DECISION: Auto-generate admin_password when empty (default).
+# Why: Eliminates the interactive prompt during `tofu apply`. Operators get the
+#      password from `tofu output -raw rancher_admin_password`. For CI/CD, pass
+#      via TF_VAR_admin_password. random_password is from hashicorp/random, already
+#      a transitive dependency via rke2-core.
+resource "random_password" "admin" {
+  count   = var.admin_password == "" ? 1 : 0
+  length  = 24
+  special = true
+}
+
+locals {
+  effective_admin_password = (
+    var.admin_password != ""
+    ? var.admin_password
+    : random_password.admin[0].result
+  )
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  BYO Ingress LB + Hostname Resolution                                     ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
@@ -108,7 +131,7 @@ locals {
           createNamespace: true
           valuesContent: |-
             hostname: ${local.effective_hostname}
-            bootstrapPassword: ${var.admin_password}
+            bootstrapPassword: ${local.effective_admin_password}
             replicas: 1
             ingress:
               tls:
@@ -312,7 +335,7 @@ module "rancher" {
 
   # Rancher configuration
   rancher_hostname = local.effective_hostname
-  admin_password   = var.admin_password
+  admin_password   = local.effective_admin_password
 
   # DECISION: Explicit dependency on L3 infrastructure + ingress LB services.
   # Why: rancher2_bootstrap polls the Rancher URL via HTTPS.

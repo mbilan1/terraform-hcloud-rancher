@@ -31,6 +31,12 @@ output "rancher_admin_token" {
   sensitive   = true
 }
 
+output "rancher_admin_password" {
+  description = "Rancher admin password (auto-generated if not provided). Use to log in at rancher_url."
+  value       = local.effective_admin_password
+  sensitive   = true
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Infrastructure
 # ═══════════════════════════════════════════════════════════════════════════════
