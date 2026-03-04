@@ -37,5 +37,5 @@ provider "rancher2" {
   api_url   = "https://${local.effective_hostname}"
   insecure  = true
   bootstrap = true
-  timeout   = "20m"
+  timeout   = "6m"
 }
