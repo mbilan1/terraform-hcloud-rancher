@@ -47,3 +47,24 @@ resource "rancher2_bootstrap" "admin" {
   initial_password = var.admin_password
   password         = var.admin_password
 }
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  Hetzner Node Driver                                                       ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# DECISION: NodeDriver is deployed via rancher2 provider AFTER bootstrap.
+# Why: Deploying via cloud-init manifests causes RKE2 deploy controller to loop
+#      and spam logs because the NodeDriver CRD doesn't exist yet. The provider
+#      safely creates the driver using Rancher's API.
+resource "rancher2_node_driver" "hetzner" {
+  active            = true
+  builtin           = false
+  name              = "hetzner"
+  description       = "Hetzner Cloud Node Driver"
+  url               = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/docker-machine-driver-hetzner_${var.hetzner_driver_version}_linux_amd64.tar.gz"
+  ui_url            = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/hetzner-node-driver-${var.hetzner_driver_version}.tgz"
+  whitelist_domains = ["api.hetzner.cloud"]
+
+  # Need Rancher to be fully bootstrapped first
+  depends_on = [rancher2_bootstrap.admin]
+}

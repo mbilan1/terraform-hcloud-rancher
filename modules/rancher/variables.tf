@@ -18,6 +18,11 @@ variable "rancher_hostname" {
   nullable    = false
 }
 
+variable "hetzner_driver_version" {
+  description = "Version of the zsys-studio Hetzner Node Driver"
+  type        = string
+}
+
 variable "admin_password" {
   description = "Initial password for the Rancher 'admin' user."
   type        = string

@@ -143,59 +143,10 @@ locals {
       YAML
     },
 
-    # DECISION: NodeDriver + UIPlugin deployed via raw manifests in cloud-init.
-    # Why: Eliminates the alekc/kubectl third-party provider entirely. The RKE2
-    #      deploy controller applies raw manifests from the manifests directory
-    #      and retries on failure. NodeDriver (management.cattle.io/v3) and
-    #      UIPlugin (catalog.cattle.io/v1) CRDs only exist after Rancher starts,
-    #      so initial applies fail but succeed on retry once Rancher registers
-    #      its CRDs. This is consistent with how cert-manager + Rancher are
-    #      deployed (all via cloud-init, no external K8s API access needed).
-    # COMPROMISE: Version changes to hetzner_driver_version only take effect on
-    #      new server creation (user_data changes are ignored on existing servers).
-    #      This is the same limitation as cert-manager/Rancher version changes.
-    #      For in-place updates, operators can manually place manifests on disk
-    #      or use the Rancher API.
-    # See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/investigations/inv-002-hetzner-machine-driver.md
-    var.install_hetzner_driver ? {
-      "10-hetzner-node-driver.yaml" = yamlencode({
-        apiVersion = "management.cattle.io/v3"
-        kind       = "NodeDriver"
-        metadata = {
-          name = "hetzner"
-          annotations = {
-            # NOTE: This annotation tells Rancher which credential field to
-            # populate when the user adds Cloud Credentials for Hetzner.
-            "privateCredentialFields" = "apiToken"
-          }
-        }
-        spec = {
-          active             = true
-          addCloudCredential = true
-          displayName        = "Hetzner"
-          url                = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/docker-machine-driver-hetzner_${var.hetzner_driver_version}_linux_amd64.tar.gz"
-          whitelistDomains   = ["api.hetzner.cloud"]
-        }
-      })
-
-      "11-hetzner-ui-extension.yaml" = yamlencode({
-        apiVersion = "catalog.cattle.io/v1"
-        kind       = "UIPlugin"
-        metadata = {
-          name      = "hetzner-node-driver"
-          namespace = "cattle-ui-plugin-system"
-        }
-        spec = {
-          plugin = {
-            name     = "hetzner-node-driver"
-            version  = var.hetzner_driver_version
-            endpoint = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/hetzner-node-driver-${var.hetzner_driver_version}.tgz"
-            noCache  = false
-            noAuth   = true
-          }
-        }
-      })
-    } : {}
+    # DECISION: NodeDriver is now deployed via rancher2 provider in modules/rancher.
+    # Why: Deploying CRDs (NodeDriver, UIPlugin) via raw manifests here causes a
+    #      race condition where RKE2's deploy controller crash-loops because the
+    #      CRDs do not exist until Rancher Helm chart is fully deployed and active.
   )
 }
 
@@ -331,8 +282,9 @@ module "rancher" {
   source = "./modules/rancher"
 
   # Rancher configuration
-  rancher_hostname = local.effective_hostname
-  admin_password   = local.effective_admin_password
+  rancher_hostname       = local.effective_hostname
+  admin_password         = local.effective_admin_password
+  hetzner_driver_version = var.hetzner_driver_version
 
   # DECISION: Explicit dependency on L3 infrastructure + ingress LB services.
   # Why: rancher2_bootstrap polls the Rancher URL via HTTPS.
