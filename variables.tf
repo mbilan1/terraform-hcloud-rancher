@@ -115,13 +115,6 @@ variable "hetzner_driver_version" {
   }
 }
 
-variable "install_hetzner_driver" {
-  description = "Install the zsys-studio Hetzner Node Driver and UI Extension. Set to false if managing the driver separately."
-  type        = bool
-  nullable    = false
-  default     = true
-}
-
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Ingress Load Balancer (BYO pattern)
 # ═══════════════════════════════════════════════════════════════════════════════
