@@ -56,6 +56,10 @@ resource "rancher2_bootstrap" "admin" {
 # Why: Deploying via cloud-init manifests causes RKE2 deploy controller to loop
 #      and spam logs because the NodeDriver CRD doesn't exist yet. The provider
 #      safely creates the driver using Rancher's API.
+# DECISION: NodeDriver must declare privateCredentialFields for Rancher to render
+#      the Cloud Credential creation form. Without this annotation, the apiToken
+#      field is unknown to Rancher and users cannot create Hetzner credentials.
+# See: https://github.com/JonasProgrammer/docker-machine-driver-hetzner
 resource "rancher2_node_driver" "hetzner" {
   active            = true
   builtin           = false
@@ -64,6 +68,13 @@ resource "rancher2_node_driver" "hetzner" {
   url               = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/docker-machine-driver-hetzner_${var.hetzner_driver_version}_linux_amd64.tar.gz"
   ui_url            = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/hetzner-node-driver-${var.hetzner_driver_version}.tgz"
   whitelist_domains = ["api.hetzner.cloud"]
+
+  # CRITICAL: These annotations tell Rancher which driver flags are credential fields.
+  # Without privateCredentialFields, Rancher cannot create the hetznercredentialconfig
+  # schema and the Cloud Credential form will be empty / non-functional.
+  annotations = {
+    "privateCredentialFields" = "apiToken"
+  }
 
   # Need Rancher to be fully bootstrapped first
   depends_on = [rancher2_bootstrap.admin]

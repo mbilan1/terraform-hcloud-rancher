@@ -143,35 +143,10 @@ locals {
       YAML
     },
 
-    # DECISION: UIPlugin is deployed via raw manifest in cloud-init to enable
-    #      the Hetzner driver in the modern Rancher Dashboard (Vue UI).
-    # Why: The rancher2_node_driver Terraform resource only exposes the driver
-    #      to the legacy Cluster Manager UI. The UIPlugin CRD is required for
-    #      the new UI.
-    # NOTE: RKE2 will spam "failed to process... the server could not find the
-    #       requested resource" for this file during the first 15-20 minutes of
-    #       bootstrapping. This is normal Eventual Consistency! The UIPlugin CRD
-    #       doesn't exist until Rancher fully starts. Once Rancher is active,
-    #       the retry succeeds and the spam stops.
-    var.install_hetzner_driver ? {
-      "99-hetzner-ui-extension.yaml" = yamlencode({
-        apiVersion = "catalog.cattle.io/v1"
-        kind       = "UIPlugin"
-        metadata = {
-          name      = "hetzner-node-driver"
-          namespace = "cattle-ui-plugin-system"
-        }
-        spec = {
-          plugin = {
-            name     = "hetzner-node-driver"
-            version  = var.hetzner_driver_version
-            endpoint = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/hetzner-node-driver-${var.hetzner_driver_version}.tgz"
-            noCache  = false
-            noAuth   = true
-          }
-        }
-      })
-    } : {}
+    # DECISION: NodeDriver is now deployed via rancher2 provider in modules/rancher.
+    # Why: Deploying CRDs (NodeDriver, UIPlugin) via raw manifests here causes a
+    #      race condition where RKE2's deploy controller crash-loops because the
+    #      CRDs do not exist until Rancher Helm chart is fully deployed and active.
   )
 }
 
