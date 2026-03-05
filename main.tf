@@ -175,6 +175,7 @@ module "rke2_cluster" {
 
   # RKE2
   rke2_version = var.rke2_version
+  rke2_config  = var.rke2_config
 
   # Firewall (BYO passthrough)
   firewall_ids = var.firewall_ids

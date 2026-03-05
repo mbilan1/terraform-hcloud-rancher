@@ -270,6 +270,21 @@ variable "hcloud_image" {
 #  RKE2 / Kubernetes
 # ═══════════════════════════════════════════════════════════════════════════════
 
+variable "rke2_config" {
+  # DECISION: Passthrough for additional RKE2 server config.
+  # Why: Enables operators to configure etcd S3 backup, audit logging,
+  #      CIS profile, and other RKE2 server settings without modifying
+  #      the module. Content is appended to every node's config.yaml.
+  # NOTE: Default enables aggressive local etcd snapshots for management clusters.
+  description = "Additional RKE2 config.yaml content appended to every management cluster node."
+  type        = string
+  nullable    = false
+  default     = <<-EOT
+    etcd-snapshot-schedule-cron: \"0 */6 * * *\"
+    etcd-snapshot-retention: 10
+  EOT
+}
+
 variable "rke2_version" {
   description = "RKE2 release tag to deploy (e.g. 'v1.34.4+rke2r1'). Leave empty for stable channel."
   type        = string

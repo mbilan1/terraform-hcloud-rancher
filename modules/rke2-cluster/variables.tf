@@ -85,6 +85,13 @@ variable "rke2_version" {
   nullable    = false
 }
 
+variable "rke2_config" {
+  description = "Additional RKE2 config.yaml content appended to every node."
+  type        = string
+  default     = ""
+  nullable    = false
+}
+
 # DECISION: extra_server_manifests passed through from root module.
 # Why: Allows root module to inject HelmChart CRDs (cert-manager, Rancher) into
 #      the cloud-init manifests directory. RKE2 HelmController installs them
