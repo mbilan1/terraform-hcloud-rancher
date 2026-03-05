@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.2.0] - 2026-03-05
 
 ### Added
 
@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BYO ingress LB**: `create_ingress_lb = false` + `existing_ingress_lb_ipv4` for BYO pattern
 - **sslip.io auto-hostname**: Auto-generates `rancher.<LB_IP>.sslip.io` — zero DNS setup
 - **Packer baked image support**: `hcloud_image` variable wired through full module chain
+- **BYO Firewall passthrough**: `firewall_ids` variable wired through full module chain (ADR-006)
+- **Dual rancher2 provider**: Bootstrap mode + admin alias for post-bootstrap resources
+- **rke2_config passthrough**: `rke2_config` variable with etcd snapshot defaults (6h schedule, 10 retention)
 - **Secrets encryption**: RKE2 secrets encryption at rest enabled by default
 - **Guardrails**: Preflight `check {}` blocks for variable validation
 - **Tests**: 35 unit tests (variable validation + guardrails) via `tofu test`
