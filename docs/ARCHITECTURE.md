@@ -386,21 +386,25 @@ flowchart LR
 
 ### Post-Provisioning (per downstream cluster)
 
-After cluster creation, install Hetzner cloud integrations:
+CCM and CSI are **automated** via the cluster template Helm chart ([rancher-hetzner-cluster-templates](https://github.com/mbilan1/rancher-hetzner-cluster-templates)):
+
+- **CCM v1.30.1** — deployed via `rkeConfig.additionalManifest` with `spec.bootstrap: true` (processed at bootstrap, before cluster-agent, avoiding the taint deadlock)
+- **CSI v2.20.0** — deployed via `rkeConfig.additionalManifest`
+- **HCLOUD_TOKEN** — delivered as K8s Secret in the same manifest
+
+When creating a downstream cluster from the Helm chart template, CCM/CSI are installed automatically. For manual cluster creation via Rancher UI, CCM/CSI must be installed manually:
 
 ```bash
-# Hetzner Cloud Controller Manager
+# Manual: Hetzner Cloud Controller Manager
 helm install hcloud-ccm hcloud/hcloud-cloud-controller-manager \
   --namespace kube-system \
   --set env.HCLOUD_TOKEN=<project-token>
 
-# Hetzner CSI Driver
+# Manual: Hetzner CSI Driver
 helm install hcloud-csi hcloud/hcloud-csi-driver \
   --namespace kube-system \
   --set env.HCLOUD_TOKEN=<project-token>
 ```
-
-> **TODO:** Investigate automating CCM/CSI installation via Rancher's `cluster-template` or `fleet` for new downstream clusters.
 
 ---
 
@@ -411,7 +415,8 @@ helm install hcloud-csi hcloud/hcloud-csi-driver \
 | Property | Value |
 |----------|-------|
 | Repository | [zsys-studio/rancher-hetzner-cluster-provider](https://github.com/zsys-studio/rancher-hetzner-cluster-provider) |
-| Version | v0.8.0 (Feb 2026) |
+| Fork (snapshot fix) | [mbilan1/rancher-hetzner-cluster-provider](https://github.com/mbilan1/rancher-hetzner-cluster-provider) |
+| Version | v0.8.0 (Feb 2026) — fork tag `v0.8.1-snapshot-fix` adds image-by-ID support |
 | License | Apache-2.0 |
 | Language | Go 88.7%, Vue 7.8% |
 | Dependencies | `hcloud-go/v2 v2.36.0`, `rancher/machine v0.15.0-rancher134` |
@@ -622,6 +627,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 | 4 | NodeDriver via rancher2 provider (not cloud-init) | Deploy order vs simplicity | Deploying NodeDriver as cloud-init manifest caused RKE2 deploy controller crash-loops (CRD doesn't exist until Rancher starts). `rancher2_node_driver` deploys after bootstrap. |
 | 5 | UI Extension via `ui_url` on rancher2_node_driver | Automation vs manual | `rancher2_node_driver` supports `ui_url` natively — installs the UI extension alongside the driver binary. |
 | 6 | No automated CCM/CSI on downstream | Automation vs scope | Post-cluster HCCM/CSI install is manual per downstream cluster. Automating via Fleet/cluster-template is a roadmap item. |
+| 7 | Packer baked image for CIS | Build complexity vs runtime flexibility | CIS host prerequisites (etcd user, sysctl, kernel modules) must exist before RKE2 starts. Rancher-machine intercepts userData (treats value as file path). Packer snapshot with prerequisites baked in is the cleanest solution. |
 
 ---
 
@@ -656,6 +662,10 @@ The module contains deliberate compromises. Each is documented in code comments 
 
 ### Mid-term (hardening)
 
+- [x] Packer baked image with CIS prerequisites (snapshot 363889876)
+- [x] `hcloud_image` variable wired through full module chain
+- [x] Cluster template Helm chart with CCM/CSI/RBAC/CIS toggle (v0.5.0)
+- [x] RKE2 v1.34.4+rke2r1 across all repos
 - [ ] HA management cluster (3 nodes)
 - [ ] BYO firewall example for management cluster (ADR-006)
 - [ ] Rancher backup/restore configuration
@@ -666,8 +676,6 @@ The module contains deliberate compromises. Each is documented in code comments 
 
 - [ ] Fleet/cluster-template for automated HCCM/CSI on downstream clusters
 - [ ] Rancher Cloud Credential management via Terraform (rancher2_cloud_credential)
-- [ ] Cluster template with Hetzner defaults (server types, locations, firewall)
-- [ ] Automated downstream cluster creation via Terraform (optional)
 - [ ] Rancher SAML/OIDC integration template
 - [ ] Network policies on management cluster
 - [ ] Audit logging configuration
