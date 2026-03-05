@@ -67,6 +67,15 @@ variable "hcloud_network_zone" {
   nullable    = false
 }
 
+# ── OS Image ─────────────────────────────────────────────────────────────────
+
+variable "hcloud_image" {
+  description = "OS image for nodes. Use 'ubuntu-24.04' or a Hetzner snapshot ID."
+  type        = string
+  default     = "ubuntu-24.04"
+  nullable    = false
+}
+
 # ── RKE2 ─────────────────────────────────────────────────────────────────────
 
 variable "rke2_version" {

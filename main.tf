@@ -170,6 +170,9 @@ module "rke2_cluster" {
   subnet_address      = var.subnet_address
   hcloud_network_zone = var.hcloud_network_zone
 
+  # OS Image
+  hcloud_image = var.hcloud_image
+
   # RKE2
   rke2_version = var.rke2_version
 

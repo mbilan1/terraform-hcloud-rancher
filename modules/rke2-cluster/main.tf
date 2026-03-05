@@ -41,6 +41,9 @@ module "cluster" {
   hcloud_network_cidr = var.hcloud_network_cidr
   subnet_address      = var.subnet_address
 
+  # ── OS Image ─────────────────────────────────────────────────────────────
+  hcloud_image = var.hcloud_image
+
   # ── RKE2 ─────────────────────────────────────────────────────────────────
   rke2_version = var.rke2_version
 
