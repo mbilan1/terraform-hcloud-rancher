@@ -45,7 +45,7 @@ module "rancher_management" {
   cluster_name              = "rancher"
   management_node_count     = 1
   control_plane_server_type = "cpx42"
-  node_location             = "nbg1"
+  node_location             = "hel1"
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
