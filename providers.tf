@@ -39,3 +39,17 @@ provider "rancher2" {
   bootstrap = true
   timeout   = "6m"
 }
+
+# ── Rancher2 (admin mode — post-bootstrap) ────────────────────────────────────
+# DECISION: Second provider alias for resources that need admin auth.
+# Why: rancher2 in bootstrap mode only supports rancher2_bootstrap.
+#      Post-bootstrap resources (node_driver, settings, etc.) need a token-based
+#      provider. The token comes from rancher2_bootstrap.admin.token output.
+# NOTE: This provider depends on module.rancher completing first (bootstrap
+#       produces the token). OpenTofu resolves this dependency automatically.
+provider "rancher2" {
+  alias     = "admin"
+  api_url   = "https://${local.effective_hostname}"
+  token_key = module.rancher.admin_token
+  insecure  = true
+}

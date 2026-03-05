@@ -46,6 +46,49 @@ module "rancher_management" {
   management_node_count     = 1
   control_plane_server_type = "cpx42"
   node_location             = "hel1"
+
+  # ── Firewall (BYO) ─────────────────────────────────────────────────────────
+  firewall_ids = [hcloud_firewall.management.id]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  Firewall — management cluster (BYO per ADR-006)                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# DECISION: Firewall created in the example, not in the module.
+# Why: ADR-006 — firewalls are BYO. Hetzner firewalls are account-level
+#      singletons with per-server attachment. The module accepts firewall_ids;
+#      consumers create and manage firewall rules externally.
+# NOTE: Hetzner firewalls only filter PUBLIC interface traffic. Private network
+#       traffic (used by LBs with use_private_ip=true) bypasses firewalls entirely.
+resource "hcloud_firewall" "management" {
+  name = "rancher-mgmt"
+
+  labels = {
+    "cluster-name" = "rancher"
+    "managed-by"   = "opentofu"
+    "role"         = "management"
+  }
+
+  # ICMP — allow ping for diagnostics
+  rule {
+    direction  = "in"
+    protocol   = "icmp"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  # K8s API — needed for kubectl access (no CP LB in single-node setup)
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "6443"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  # NOTE: Ports 80/443 are NOT opened on the server's public IP.
+  # Why: The ingress LB routes to servers via private network (use_private_ip=true).
+  #      Private network traffic bypasses Hetzner firewalls entirely.
+  #      Only the LB's public IP needs to be reachable on 80/443.
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────

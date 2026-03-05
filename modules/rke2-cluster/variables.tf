@@ -96,3 +96,12 @@ variable "extra_server_manifests" {
   default     = {}
   nullable    = false
 }
+
+# ── Firewall (BYO passthrough) ───────────────────────────────────────────────
+
+variable "firewall_ids" {
+  description = "List of Hetzner firewall IDs to attach to nodes."
+  type        = list(number)
+  default     = []
+  nullable    = false
+}

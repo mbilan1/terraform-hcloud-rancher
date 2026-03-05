@@ -47,6 +47,9 @@ module "cluster" {
   # ── RKE2 ─────────────────────────────────────────────────────────────────
   rke2_version = var.rke2_version
 
+  # ── Firewall (BYO passthrough) ──────────────────────────────────────────
+  firewall_ids = var.firewall_ids
+
   # DECISION: Pass server manifests for HelmChart CRD-based L4 bootstrap.
   # Why: cert-manager + Rancher are installed by RKE2 HelmController from
   #      manifest files placed in cloud-init. This eliminates the need for

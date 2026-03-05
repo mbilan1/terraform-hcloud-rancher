@@ -176,6 +176,9 @@ module "rke2_cluster" {
   # RKE2
   rke2_version = var.rke2_version
 
+  # Firewall (BYO passthrough)
+  firewall_ids = var.firewall_ids
+
   # DECISION: Pass ALL L4 manifests (HelmCharts + raw CRDs) via cloud-init.
   # Why: Eliminates the need for helm/kubernetes/kubectl Terraform providers.
   #      RKE2 HelmController installs cert-manager + Rancher from HelmChart CRDs.
@@ -285,9 +288,8 @@ module "rancher" {
   source = "./modules/rancher"
 
   # Rancher configuration
-  rancher_hostname       = local.effective_hostname
-  admin_password         = local.effective_admin_password
-  hetzner_driver_version = var.hetzner_driver_version
+  rancher_hostname = local.effective_hostname
+  admin_password   = local.effective_admin_password
 
   # DECISION: Explicit dependency on L3 infrastructure + ingress LB services.
   # Why: rancher2_bootstrap polls the Rancher URL via HTTPS.
@@ -298,4 +300,35 @@ module "rancher" {
     module.rke2_cluster,
     hcloud_load_balancer_service.https,
   ]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  Hetzner Node Driver — post-bootstrap (requires rancher2.admin provider)   ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# DECISION: NodeDriver managed in root main.tf, not in the rancher child module.
+# Why: The rancher child module uses rancher2 in bootstrap mode, which only
+#      supports rancher2_bootstrap. Post-bootstrap resources (node_driver,
+#      settings) need the rancher2.admin provider alias with a real admin token.
+#      Moving this to root allows explicit provider assignment.
+# DECISION: NodeDriver must declare privateCredentialFields for Rancher to render
+#      the Cloud Credential creation form. Without this annotation, the apiToken
+#      field is unknown to Rancher and users cannot create Hetzner credentials.
+# See: https://github.com/zsys-studio/rancher-hetzner-cluster-provider
+resource "rancher2_node_driver" "hetzner" {
+  provider = rancher2.admin
+
+  active            = true
+  builtin           = false
+  name              = "hetzner"
+  description       = "Hetzner Cloud Node Driver"
+  url               = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/docker-machine-driver-hetzner_${var.hetzner_driver_version}_linux_amd64.tar.gz"
+  ui_url            = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/hetzner-node-driver-${var.hetzner_driver_version}.tgz"
+  whitelist_domains = ["api.hetzner.cloud"]
+
+  annotations = {
+    "privateCredentialFields" = "apiToken"
+  }
+
+  depends_on = [module.rancher]
 }

@@ -234,11 +234,17 @@ variable "hcloud_network_zone" {
 #  Security / Access control
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# DECISION: ssh_allowed_cidrs and k8s_api_allowed_cidrs removed.
-# Why: Firewalls are BYO (ADR-006). rke2-core no longer creates firewalls.
-#      Operators manage firewalls externally — a separate composable firewall
-#      module will handle rules for SSH, K8s API, and ingress ports.
-#      ssh_key access is also BYO via rke2-core's ssh_key_ids variable.
+# DECISION: BYO Firewall — passthrough to rke2-core.
+# Why: Hetzner firewalls are account-level singletons (ADR-006). Consumers
+#      create firewalls externally and pass IDs via this variable. The IDs
+#      are forwarded to rke2-core which attaches them to all cluster nodes.
+# See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-006-byo-firewall.md
+variable "firewall_ids" {
+  description = "List of Hetzner firewall IDs to attach to all management cluster nodes. BYO: create firewalls externally and pass their IDs."
+  type        = list(number)
+  nullable    = false
+  default     = []
+}
 
 # DECISION: enable_secrets_encryption removed.
 # Why: rke2-core does not expose this variable. Secrets encryption is

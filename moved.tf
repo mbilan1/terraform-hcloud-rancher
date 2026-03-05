@@ -33,6 +33,15 @@ moved {
   to   = hcloud_load_balancer_service.https["main"]
 }
 
+# DECISION: rancher2_node_driver moved from rancher child module to root.
+# Why: The rancher child module uses rancher2 provider in bootstrap mode,
+#      which only supports rancher2_bootstrap. The node_driver needs the
+#      rancher2.admin provider alias with post-bootstrap admin token auth.
+moved {
+  from = module.rancher.rancher2_node_driver.hetzner
+  to   = rancher2_node_driver.hetzner
+}
+
 # DECISION: kubectl_manifest resources are removed (deployed via cloud-init now).
 # Why: NodeDriver and UIPlugin were previously created by alekc/kubectl provider
 #      as kubectl_manifest resources. They are now deployed via RKE2 deploy
