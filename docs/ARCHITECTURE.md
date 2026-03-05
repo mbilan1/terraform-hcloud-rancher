@@ -484,7 +484,7 @@ flowchart LR
 | Control | Implementation | Status |
 |---------|---------------|--------|
 | Cloud Firewall | Hetzner Cloud Firewall (BYO — consumer creates and passes IDs) | ✅ Via `firewall_ids` variable (ADR-006) |
-| Private network | Inter-node traffic on 10.0.0.0/16 | ✅ Via terraform-hcloud-ubuntu-rke2 |
+| Private network | Inter-node traffic on 10.0.0.0/16 | ✅ Via terraform-hcloud-rke2-core |
 | Project isolation | Separate Hetzner Cloud Project per downstream cluster | ✅ Design-level |
 | No SSH | Cloud-init only bootstrap, no SSH provisioners | ✅ Implemented |
 | Egress filtering | Not implemented — all outbound traffic allowed | 🔲 Not implemented |
@@ -493,11 +493,11 @@ flowchart LR
 
 | Control | Implementation | Status |
 |---------|---------------|--------|
-| Secrets encryption at rest | RKE2 `secrets-encryption: true` | ✅ Via terraform-hcloud-ubuntu-rke2 |
+| Secrets encryption at rest | RKE2 `secrets-encryption: true` | ✅ Via terraform-hcloud-rke2-core |
 | RBAC | Kubernetes native RBAC | ✅ Built-in (RKE2) |
 | Network Policies | Default deny + explicit allow | 🔲 Planned |
 | Pod Security Standards | Admission controller | 🔲 Planned |
-| etcd backup | S3-compatible backup for management etcd | 🟡 Via terraform-hcloud-ubuntu-rke2 (opt-in) |
+| etcd backup | S3-compatible backup for management etcd | 🟡 Via terraform-hcloud-rke2-core (opt-in) |
 
 ### Layer 3: Application
 

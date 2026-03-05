@@ -28,9 +28,9 @@ provider "hcloud" {
 #      no auth token required.
 # NOTE: insecure = true because during initial bootstrap, Rancher uses a
 #       self-signed cert. The bootstrap mode polls until Rancher is ready.
-# DECISION: timeout = "30m" to accommodate HelmChart CRD installation time.
+# DECISION: timeout = "6m" as a reasonable initial bootstrap timeout.
 # Why: cert-manager and Rancher are installed by RKE2 HelmController after
-#      the initial server boots. This can take 10–20 minutes depending on
+#      the initial server boots. This can take several minutes depending on
 #      image pulls and CRD readiness. The rancher2 provider retries until
 #      the API is accessible or the timeout expires.
 provider "rancher2" {

@@ -18,11 +18,11 @@ tofu apply
 ```bash
 # Phase 1: Deploy infrastructure to get LB IP
 tofu apply -target=module.rancher_management.module.rke2_cluster \
-           -target=module.rancher_management.hcloud_load_balancer.ingress \
-           -target=module.rancher_management.hcloud_load_balancer_network.ingress \
-           -target=module.rancher_management.hcloud_load_balancer_target.ingress_masters \
-           -target=module.rancher_management.hcloud_load_balancer_service.ingress_http \
-           -target=module.rancher_management.hcloud_load_balancer_service.ingress_https
+           -target='module.rancher_management.hcloud_load_balancer.ingress["main"]' \
+           -target='module.rancher_management.hcloud_load_balancer_network.ingress["main"]' \
+           -target='module.rancher_management.hcloud_load_balancer_target.ingress["main"]' \
+           -target='module.rancher_management.hcloud_load_balancer_service.http["main"]' \
+           -target='module.rancher_management.hcloud_load_balancer_service.https["main"]'
 
 # Phase 2: Full apply with sslip.io hostname
 export TF_VAR_rancher_hostname="rancher.$(tofu output -raw ingress_lb_ipv4).sslip.io"
