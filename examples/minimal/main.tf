@@ -46,11 +46,6 @@ module "rancher_management" {
   management_node_count     = 1
   control_plane_server_type = "cpx42"
   node_location             = "hel1"
-
-  # DECISION: Use Packer baked CIS-hardened image for E2E testing.
-  # Why: Validates that the management cluster boots correctly from a
-  #      pre-hardened snapshot (CIS Level 1, RKE2 v1.34.4 pre-installed).
-  hcloud_image = "363889876"
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
