@@ -224,7 +224,7 @@ flowchart TB
 | Network | 10.0.0.0/16 | Private subnet |
 | DNS | BYO or sslip.io | Auto-generates hostname from ingress LB IP; or set `rancher_hostname` |
 | OS | Ubuntu 24.04 LTS | Same as downstream clusters |
-| K8s | RKE2 v1.32.2+rke2r1 | Matches Rancher v2.13 compatibility |
+| K8s | RKE2 v1.34.4+rke2r1 | Matches Rancher v2.13 compatibility |
 
 **Why single node?** The management cluster runs only Rancher and its dependencies. For HA, scale to 3 nodes. The module supports `management_node_count = 1 | 3`.
 

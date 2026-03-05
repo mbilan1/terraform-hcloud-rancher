@@ -400,7 +400,7 @@ run "rke2_version_accepts_rke2_format" {
     hcloud_api_token = "mock-token"
     rancher_hostname = "rancher.example.com"
     admin_password   = "SecurePassword123"
-    rke2_version     = "v1.32.2+rke2r1"
+    rke2_version     = "v1.34.4+rke2r1"
   }
 }
 

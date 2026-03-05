@@ -249,10 +249,10 @@ variable "hcloud_network_zone" {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 variable "rke2_version" {
-  description = "RKE2 release tag to deploy (e.g. 'v1.32.2+rke2r1'). Leave empty for stable channel."
+  description = "RKE2 release tag to deploy (e.g. 'v1.34.4+rke2r1'). Leave empty for stable channel."
   type        = string
   nullable    = false
-  default     = "v1.32.2+rke2r1"
+  default     = "v1.34.4+rke2r1"
 
   validation {
     condition     = var.rke2_version == "" || can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.rke2_version))

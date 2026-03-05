@@ -70,9 +70,9 @@ variable "hcloud_network_zone" {
 # ── RKE2 ─────────────────────────────────────────────────────────────────────
 
 variable "rke2_version" {
-  description = "RKE2 release tag to deploy (e.g. 'v1.32.2+rke2r1'). Empty = stable channel."
+  description = "RKE2 release tag to deploy (e.g. 'v1.34.4+rke2r1'). Empty = stable channel."
   type        = string
-  default     = "v1.32.2+rke2r1"
+  default     = "v1.34.4+rke2r1"
   nullable    = false
 }
 
