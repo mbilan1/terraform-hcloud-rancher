@@ -353,36 +353,66 @@ After `tofu apply` completes, downstream clusters are created **through Rancher 
 
 ```mermaid
 flowchart LR
+    subgraph packer["Packer (one-time per project)"]
+        build["packer build\n-var hcloud_token=TOKEN\n-var enable_cis_hardening=true"]
+        snap["Hetzner Snapshot\n(CIS-hardened golden image)"]
+    end
+
     subgraph rancher["Rancher UI"]
         cred["1. Cloud Credentials\n(HCLOUD_TOKEN)"]
         create["2. Create Cluster\nRKE2/K3s → Hetzner"]
-        pools["3. Machine Pools\nlocation, type, image, roles"]
-        config["4. Cluster Config\nK8s version, CNI"]
+        image["3. Machine Image\nSnapshot ID from Packer"]
+        pools["4. Machine Pools\nlocation, type, roles"]
+        config["5. Cluster Config\nK8s version, CNI"]
     end
 
     subgraph driver["zsys-studio Machine Driver"]
-        ssh["SSH key gen"]
-        server["hcloud Server.Create"]
+        resolve["resolveImage(ID)\n→ GetByID"]
+        server["hcloud Server.Create\n(from snapshot)"]
         fw["Firewall setup"]
         install["RKE2 install\nvia Rancher agent"]
     end
 
-    cred --> create --> pools --> config
-    config -->|"Create"| ssh --> server --> fw --> install
+    build --> snap
+    snap -.->|"snapshot ID"| image
+    cred --> create --> image --> pools --> config
+    config -->|"Create"| resolve --> server --> fw --> install
 ```
+
+### CIS Golden Image Flow
+
+CIS host prerequisites (etcd user, sysctl hardening, kernel modules) must exist **before** RKE2 starts. Rancher's machine driver intercepts the `userData` flag (treats the value as a file path), so cloud-init cannot deliver these settings. The solution is Packer-baked Hetzner snapshots.
+
+**Snapshots are Hetzner-project-scoped.** A snapshot built with Project A's token is only visible to servers in Project A. For each downstream Hetzner project:
+
+```
+1. packer build -var hcloud_token=$PROJECT_TOKEN -var enable_cis_hardening=true .
+   → Snapshot ID: 555666 (in that project)
+
+2. Rancher UI → Create Cluster → Machine Image: 555666
+   → Cloud Credential must use the SAME project token
+
+3. Node Driver: resolveImage("555666") → GetByID(555666) → found ✅
+   → Server created from CIS-hardened snapshot
+```
+
+Without CIS hardening: skip Packer, use default `ubuntu-24.04` (Hetzner stock image).
+
+Rebuild when: new RKE2 version, CIS benchmark update, or Ubuntu security patch. Multiple clusters in the same project reuse the same snapshot.
 
 ### Workflow
 
 1. **Cloud Credentials** → Create → Hetzner Cloud → enter the project's `HCLOUD_TOKEN`
-2. **Cluster Management** → Create → "Provision new nodes using RKE2/K3s" → Hetzner
-3. **Machine Pools** → configure per pool:
+2. **(Optional) Build CIS golden image** → `packer build -var hcloud_token=<same-token> -var enable_cis_hardening=true .` → note snapshot ID
+3. **Cluster Management** → Create → "Provision new nodes using RKE2/K3s" → Hetzner
+4. **Machine Image** → enter Packer snapshot ID (e.g. `555666`) or leave as `ubuntu-24.04`
+5. **Machine Pools** → configure per pool:
    - Location: `hel1`, `nbg1`, `fsn1`
    - Server Type: `cx23`, `cx33`, `cx43`, ...
-   - Image: `ubuntu-24.04`
    - Roles: etcd, control-plane, worker (mix or dedicated)
    - Count: 1-N
-4. **Cluster Config** → Kubernetes version, CNI, cloud provider, etc.
-5. **Create** → Rancher provisions servers via Hetzner API, installs RKE2
+6. **Cluster Config** → Kubernetes version, CNI, cloud provider, etc.
+7. **Create** → Rancher provisions servers via Hetzner API, installs RKE2
 
 ### Post-Provisioning (per downstream cluster)
 
@@ -627,7 +657,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 | 4 | NodeDriver via rancher2 provider (not cloud-init) | Deploy order vs simplicity | Deploying NodeDriver as cloud-init manifest caused RKE2 deploy controller crash-loops (CRD doesn't exist until Rancher starts). `rancher2_node_driver` deploys after bootstrap. |
 | 5 | UI Extension via `ui_url` on rancher2_node_driver | Automation vs manual | `rancher2_node_driver` supports `ui_url` natively — installs the UI extension alongside the driver binary. |
 | 6 | No automated CCM/CSI on downstream | Automation vs scope | Post-cluster HCCM/CSI install is manual per downstream cluster. Automating via Fleet/cluster-template is a roadmap item. |
-| 7 | Packer baked image for CIS | Build complexity vs runtime flexibility | CIS host prerequisites (etcd user, sysctl, kernel modules) must exist before RKE2 starts. Rancher-machine intercepts userData (treats value as file path). Packer snapshot with prerequisites baked in is the cleanest solution. |
+| 7 | Packer baked image for CIS | Build complexity vs runtime flexibility | CIS host prerequisites (etcd user, sysctl, kernel modules) must exist before RKE2 starts. Rancher-machine intercepts userData (treats value as file path). Packer snapshot with prerequisites baked in is the cleanest solution. Snapshots auto-named: `ubuntu-2404-rke2-{version}[-cis-l1]-{timestamp}`. |
 
 ---
 
@@ -662,8 +692,9 @@ The module contains deliberate compromises. Each is documented in code comments 
 
 ### Mid-term (hardening)
 
-- [x] Packer baked image with CIS prerequisites (snapshot 363889876)
+- [x] Packer baked image with CIS prerequisites + UFW host firewall
 - [x] `hcloud_image` variable wired through full module chain
+- [x] Snapshot naming convention: `ubuntu-2404-rke2-{version}[-cis-l1]-{timestamp}`
 - [x] Cluster template Helm chart with CCM/CSI/RBAC/CIS toggle (v0.5.0)
 - [x] RKE2 v1.34.4+rke2r1 across all repos
 - [ ] HA management cluster (3 nodes)

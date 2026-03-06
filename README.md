@@ -1,8 +1,28 @@
 # terraform-hcloud-rancher
 
-An **OpenTofu/Terraform module** that deploys a production-oriented **Rancher management cluster on Hetzner Cloud** with built-in Hetzner Node Driver for downstream cluster provisioning via the Rancher UI.
+> **⚠️ Experimental (Beta)** — This is an **unofficial** community implementation, under active development and **not production-ready**.
+> APIs, variables, and behavior may change without notice. Use at your own risk.
+> No stability guarantees are provided until v1.0.0.
 
-> **Status**: Experimental — under active development, not production-ready
+An **OpenTofu/Terraform module** that deploys a **Rancher management cluster on Hetzner Cloud** with built-in Hetzner Node Driver for downstream cluster provisioning via the Rancher UI.
+
+## Ecosystem
+
+This module is part of the **RKE2-on-Hetzner** ecosystem — a set of interconnected projects that together provide a complete Kubernetes management platform on Hetzner Cloud.
+
+| Repository | Role in Ecosystem |
+|---|---|
+| [`terraform-hcloud-rke2-core`](https://github.com/mbilan1/terraform-hcloud-rke2-core) | L3 infrastructure primitive — servers, network, readiness |
+| **`terraform-hcloud-rancher`** (this repo) | **Management cluster — Rancher + Node Driver on RKE2** |
+| [`rancher-hetzner-cluster-templates`](https://github.com/mbilan1/rancher-hetzner-cluster-templates) | Downstream cluster provisioning via Rancher UI |
+| [`packer-hcloud-ubuntu-rke2-golden-image`](https://github.com/mbilan1/packer-hcloud-ubuntu-rke2-golden-image) | Golden image builder — CIS-hardened snapshots for nodes |
+| [`rke2-hetzner-architecture`](https://github.com/mbilan1/rke2-hetzner-architecture) | Architecture knowledge base — ADRs, investigations, designs |
+
+```
+rke2-core (L3 infra) → rancher (L3+L4 management) → cluster-templates (downstream via UI)
+                                                    ↑
+                                        packer (golden images for nodes)
+```
 
 ## Features
 
