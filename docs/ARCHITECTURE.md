@@ -355,7 +355,7 @@ After `tofu apply` completes, downstream clusters are created **through Rancher 
 flowchart LR
     subgraph packer["Packer (one-time per project)"]
         build["packer build\n-var hcloud_token=TOKEN\n-var enable_cis_hardening=true"]
-        snap["Hetzner Snapshot\n(CIS-hardened golden image)"]
+        snap["Hetzner Snapshot\n(CIS-hardened node image)"]
     end
 
     subgraph rancher["Rancher UI"]
@@ -379,7 +379,7 @@ flowchart LR
     config -->|"Create"| resolve --> server --> fw --> install
 ```
 
-### CIS Golden Image Flow
+### CIS Node Image Flow
 
 CIS host prerequisites (etcd user, sysctl hardening, kernel modules) must exist **before** RKE2 starts. Rancher's machine driver intercepts the `userData` flag (treats the value as a file path), so cloud-init cannot deliver these settings. The solution is Packer-baked Hetzner snapshots.
 
@@ -403,7 +403,7 @@ Rebuild when: new RKE2 version, CIS benchmark update, or Ubuntu security patch. 
 ### Workflow
 
 1. **Cloud Credentials** → Create → Hetzner Cloud → enter the project's `HCLOUD_TOKEN`
-2. **(Optional) Build CIS golden image** → `packer build -var hcloud_token=<same-token> -var enable_cis_hardening=true .` → note snapshot ID
+2. **(Optional) Build CIS node image** → `packer build -var hcloud_token=<same-token> -var enable_cis_hardening=true .` → note snapshot ID
 3. **Cluster Management** → Create → "Provision new nodes using RKE2/K3s" → Hetzner
 4. **Machine Image** → enter Packer snapshot ID (e.g. `555666`) or leave as `ubuntu-24.04`
 5. **Machine Pools** → configure per pool:

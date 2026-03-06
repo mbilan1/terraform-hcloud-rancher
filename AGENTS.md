@@ -169,6 +169,15 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `style`, `test`, `ci`
 
 ---
 
+## Architecture Knowledge Base
+
+Full architectural context is maintained in a separate **private** repository:
+- **Repo**: [rke2-hetzner-architecture](https://github.com/mbilan1/rke2-hetzner-architecture)
+- Contains: ADRs, investigation reports, design documents
+- Read it for platform-wide context that spans multiple repos
+
+---
+
 ## Common Pitfalls
 
 1. **Root module is not runnable** — use `examples/` for plan/apply

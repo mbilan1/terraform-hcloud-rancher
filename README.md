@@ -15,13 +15,12 @@ This module is part of the **RKE2-on-Hetzner** ecosystem — a set of interconne
 | [`terraform-hcloud-rke2-core`](https://github.com/mbilan1/terraform-hcloud-rke2-core) | L3 infrastructure primitive — servers, network, readiness |
 | **`terraform-hcloud-rancher`** (this repo) | **Management cluster — Rancher + Node Driver on RKE2** |
 | [`rancher-hetzner-cluster-templates`](https://github.com/mbilan1/rancher-hetzner-cluster-templates) | Downstream cluster provisioning via Rancher UI |
-| [`packer-hcloud-ubuntu-rke2-golden-image`](https://github.com/mbilan1/packer-hcloud-ubuntu-rke2-golden-image) | Golden image builder — CIS-hardened snapshots for nodes |
-| [`rke2-hetzner-architecture`](https://github.com/mbilan1/rke2-hetzner-architecture) | Architecture knowledge base — ADRs, investigations, designs |
+| [`packer-hcloud-rke2`](https://github.com/mbilan1/packer-hcloud-rke2) | Packer node image — CIS-hardened snapshots |
 
 ```
 rke2-core (L3 infra) → rancher (L3+L4 management) → cluster-templates (downstream via UI)
                                                     ↑
-                                        packer (golden images for nodes)
+                                        packer (node images)
 ```
 
 ## Features
