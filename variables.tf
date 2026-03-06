@@ -83,8 +83,10 @@ variable "letsencrypt_email" {
   nullable    = false
   default     = ""
 
-  # NOTE: Validation is relaxed — empty string is allowed when tls_source != letsEncrypt.
-  # Cross-variable validation (tls_source + letsencrypt_email) is enforced in guardrails.tf.
+  validation {
+    condition     = var.letsencrypt_email == "" || can(regex("@", var.letsencrypt_email))
+    error_message = "letsencrypt_email must contain an @ symbol (or be empty)."
+  }
 }
 
 variable "cert_manager_version" {
@@ -138,7 +140,7 @@ variable "existing_ingress_lb_ipv4" {
   default     = ""
 
   validation {
-    condition     = var.existing_ingress_lb_ipv4 == "" || can(regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", var.existing_ingress_lb_ipv4))
+    condition     = var.existing_ingress_lb_ipv4 == "" || can(cidrhost("${var.existing_ingress_lb_ipv4}/32", 0))
     error_message = "existing_ingress_lb_ipv4 must be a valid IPv4 address or empty."
   }
 }
@@ -185,8 +187,8 @@ variable "node_location" {
   default     = "hel1"
 
   validation {
-    condition     = length(var.node_location) > 0
-    error_message = "node_location must not be empty."
+    condition     = contains(["nbg1", "fsn1", "hel1", "ash", "hil", "sin"], var.node_location)
+    error_message = "Must be a valid Hetzner Cloud location: nbg1, fsn1, hel1, ash, hil, sin."
   }
 }
 
@@ -280,7 +282,7 @@ variable "rke2_config" {
   type        = string
   nullable    = false
   default     = <<-EOT
-    etcd-snapshot-schedule-cron: \"0 */6 * * *\"
+    etcd-snapshot-schedule-cron: "0 */6 * * *"
     etcd-snapshot-retention: 10
   EOT
 }

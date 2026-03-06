@@ -1,15 +1,11 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Rancher child module — outputs
 #
-# DECISION: Expose Rancher URL and admin token for downstream provisioning.
-# Why: After tofu apply, the operator needs the Rancher URL and an admin token
-#      to create Cloud Credentials and provision downstream clusters via UI.
+# DECISION: Expose admin token for downstream provisioning.
+# Why: After tofu apply, the operator needs the admin token for the rancher2.admin
+#      provider alias. Rancher URL is constructed in root outputs.tf from
+#      local.effective_hostname — not duplicated here.
 # ──────────────────────────────────────────────────────────────────────────────
-
-output "rancher_url" {
-  description = "Rancher UI URL (HTTPS)"
-  value       = "https://${var.rancher_hostname}"
-}
 
 output "admin_token" {
   description = "Rancher admin API token for programmatic access. Treat as a secret."

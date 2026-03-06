@@ -59,6 +59,8 @@ mock_provider "hcloud" {
 
 mock_provider "rancher2" {}
 
+mock_provider "random" {}
+
 # DECISION: Override module.rke2_cluster (wrapper) with mock outputs matching rke2-core API.
 # Why: rke2-core is a proper module and uses the root hcloud mock_provider, so its
 #      resources would be mocked automatically. However, override_module is still used
@@ -434,4 +436,113 @@ run "network_zone_rejects_invalid" {
   }
 
   expect_failures = [var.hcloud_network_zone]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V11: cert_manager_version — must be semver                            ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "cert_manager_version_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token     = "mock-token"
+    rancher_hostname     = "rancher.example.com"
+    admin_password       = "SecurePassword123"
+    cert_manager_version = "latest"
+  }
+
+  expect_failures = [var.cert_manager_version]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V12: hetzner_driver_version — must be semver                          ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "hetzner_driver_version_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token       = "mock-token"
+    rancher_hostname       = "rancher.example.com"
+    admin_password         = "SecurePassword123"
+    hetzner_driver_version = "v0.8"
+  }
+
+  expect_failures = [var.hetzner_driver_version]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V13: existing_ingress_lb_ipv4 — validates IP format                   ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "existing_lb_ip_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token         = "mock-token"
+    rancher_hostname         = "rancher.example.com"
+    admin_password           = "SecurePassword123"
+    existing_ingress_lb_ipv4 = "999.999.999.999"
+  }
+
+  expect_failures = [var.existing_ingress_lb_ipv4]
+}
+
+run "existing_lb_ip_accepts_valid" {
+  command = plan
+
+  variables {
+    hcloud_api_token         = "mock-token"
+    rancher_hostname         = "rancher.example.com"
+    admin_password           = "SecurePassword123"
+    create_ingress_lb        = false
+    existing_ingress_lb_ipv4 = "10.0.0.1"
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V14: subnet_address — must be valid CIDR                              ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "subnet_address_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    subnet_address   = "not-a-cidr"
+  }
+
+  expect_failures = [var.subnet_address]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V15: node_location — must be valid Hetzner location                   ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "node_location_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    node_location    = "moon-1"
+  }
+
+  expect_failures = [var.node_location]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V16: letsencrypt_email — validates @ presence                         ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "letsencrypt_email_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token  = "mock-token"
+    rancher_hostname  = "rancher.example.com"
+    admin_password    = "SecurePassword123"
+    tls_source        = "letsEncrypt"
+    letsencrypt_email = "not-an-email"
+  }
+
+  expect_failures = [var.letsencrypt_email]
 }

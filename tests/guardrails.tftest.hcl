@@ -47,6 +47,8 @@ mock_provider "hcloud" {
 
 mock_provider "rancher2" {}
 
+mock_provider "random" {}
+
 override_module {
   target = module.rke2_cluster
 

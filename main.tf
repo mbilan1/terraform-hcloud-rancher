@@ -21,6 +21,11 @@
 #      password from `tofu output -raw rancher_admin_password`. For CI/CD, pass
 #      via TF_VAR_admin_password. random_password is from hashicorp/random, already
 #      a transitive dependency via rke2-core.
+# COMPROMISE: Admin password appears in Hetzner user_data field (OpenTofu state).
+# Why: Cloud-init HelmChart CRDs embed bootstrapPassword in the YAML manifest,
+#      which goes into hcloud_server.user_data. Hetzner stores user_data in its
+#      API and OpenTofu stores it in state. This is unavoidable without
+#      eliminating cloud-init for L4 deployment. Mitigation: encrypt state at rest.
 resource "random_password" "admin" {
   count   = var.admin_password == "" ? 1 : 0
   length  = 24

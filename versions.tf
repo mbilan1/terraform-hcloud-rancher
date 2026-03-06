@@ -41,6 +41,14 @@ terraform {
       source  = "rancher/rancher2"
       version = "= 13.1.4"
     }
+
+    # ── Utility: random_password for auto-generated admin password ────────────
+    # NOTE: Also a transitive dependency via rke2-core (cluster token).
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 

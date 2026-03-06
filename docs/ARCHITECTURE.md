@@ -114,10 +114,10 @@ terraform-hcloud-rancher/                # Root module (facade)
 │   │   ├── outputs.tf                   # network_id, initial_master_ipv4, cluster_ready
 │   │   └── versions.tf                  # required_providers
 │   │
-│   └── rancher/                         # L4: Rancher admin bootstrap + Node Driver
-│       ├── main.tf                      # rancher2_bootstrap + rancher2_node_driver
-│       ├── variables.tf                 # rancher_hostname, admin_password, hetzner_driver_version
-│       ├── outputs.tf                   # rancher_url, admin_token
+│   └── rancher/                         # L4: Rancher admin bootstrap
+│       ├── main.tf                      # rancher2_bootstrap
+│       ├── variables.tf                 # rancher_hostname, admin_password
+│       ├── outputs.tf                   # admin_token
 │       └── versions.tf                  # required_providers (rancher2 only)
 │
 ├── docs/
@@ -139,7 +139,8 @@ terraform-hcloud-rancher/                # Root module (facade)
 | L3 | `modules/rke2-cluster/` | Hetzner Cloud infrastructure (servers, network) | OpenTofu via `terraform-hcloud-rke2-core` |
 | L3 | Root (`/`) ingress LB | BYO ingress load balancer (ADR-003) | OpenTofu (`hcloud` provider) |
 | L4 | Root (`/`) cloud-init manifests | cert-manager + Rancher HelmChart CRDs | RKE2 HelmController (via `extra_server_manifests`) |
-| L4 | `modules/rancher/` | Rancher admin bootstrap + Hetzner Node Driver | OpenTofu (`rancher2` provider) |
+| L4 | `modules/rancher/` | Rancher admin bootstrap | OpenTofu (`rancher2` provider, bootstrap mode) |
+| L4 | Root (`/`) `rancher2_node_driver` | Hetzner Node Driver + UI extension | OpenTofu (`rancher2` provider, admin mode) |
 
 ### Design Decisions
 
@@ -160,10 +161,12 @@ Root module (2 providers only)
     │   └── module.rke2_cluster
     │       └── module.cluster (rke2-core)       # servers, network, readiness
     │
-    └── provider "rancher2" (bootstrap mode, insecure, timeout = "6m")
-        └── module.rancher
-            ├── rancher2_bootstrap.admin          # admin password + token
-            └── rancher2_node_driver.hetzner      # Hetzner driver + UI extension
+    ├── provider "rancher2" (bootstrap mode, insecure, timeout = "6m")
+    │   └── module.rancher
+    │       └── rancher2_bootstrap.admin          # admin password + token
+    │
+    └── provider "rancher2" alias "admin" (token-based, post-bootstrap)
+        └── rancher2_node_driver.hetzner          # Hetzner driver + UI extension
 ```
 
 Providers are configured **in the root module only**. The `rancher2` provider runs in bootstrap mode — it only needs the Rancher URL (auto-generated from LB IP), no auth token. It polls until Rancher is ready, then sets the admin password.
