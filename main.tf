@@ -148,10 +148,34 @@ locals {
       YAML
     },
 
-    # DECISION: NodeDriver is now deployed via rancher2 provider in modules/rancher.
-    # Why: Deploying CRDs (NodeDriver, UIPlugin) via raw manifests here causes a
-    #      race condition where RKE2's deploy controller crash-loops because the
-    #      CRDs do not exist until Rancher Helm chart is fully deployed and active.
+    # DECISION: NodeDriver deployed via raw K8s manifest in cloud-init.
+    # Why: The rancher2_node_driver Terraform resource auto-generates metadata.name
+    #      as "nd-XXXXX". Rancher's provisioning controller derives the expected
+    #      driver name from machineConfigRef.kind (HetznerConfig → "hetzner") and
+    #      looks up nodedrivers.management.cattle.io by metadata.name. The mismatch
+    #      causes "hetzner not found" errors during downstream provisioning.
+    #      Deploying via cloud-init gives explicit control over metadata.name.
+    # NOTE: RKE2's deploy controller retries failed manifests. This manifest will
+    #      fail initially (management.cattle.io CRDs don't exist until Rancher
+    #      starts) but self-heals once Rancher registers its CRDs (~2-3 min).
+    {
+      "02-hetzner-node-driver.yaml" = <<-YAML
+        apiVersion: management.cattle.io/v3
+        kind: NodeDriver
+        metadata:
+          name: hetzner
+          annotations:
+            privateCredentialFields: "apiToken"
+        spec:
+          active: true
+          displayName: hetzner
+          description: "Hetzner Cloud Node Driver (zsys-studio)"
+          url: "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/docker-machine-driver-hetzner_${var.hetzner_driver_version}_linux_amd64.tar.gz"
+          uiUrl: "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/hetzner-node-driver-${var.hetzner_driver_version}.tgz"
+          whitelistDomains:
+            - "api.hetzner.cloud"
+      YAML
+    },
   )
 }
 
@@ -308,33 +332,7 @@ module "rancher" {
   ]
 }
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  Hetzner Node Driver — post-bootstrap (requires rancher2.admin provider)   ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-
-# DECISION: NodeDriver managed in root main.tf, not in the rancher child module.
-# Why: The rancher child module uses rancher2 in bootstrap mode, which only
-#      supports rancher2_bootstrap. Post-bootstrap resources (node_driver,
-#      settings) need the rancher2.admin provider alias with a real admin token.
-#      Moving this to root allows explicit provider assignment.
-# DECISION: NodeDriver must declare privateCredentialFields for Rancher to render
-#      the Cloud Credential creation form. Without this annotation, the apiToken
-#      field is unknown to Rancher and users cannot create Hetzner credentials.
-# See: https://github.com/zsys-studio/rancher-hetzner-cluster-provider
-resource "rancher2_node_driver" "hetzner" {
-  provider = rancher2.admin
-
-  active            = true
-  builtin           = false
-  name              = "hetzner"
-  description       = "Hetzner Cloud Node Driver"
-  url               = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/docker-machine-driver-hetzner_${var.hetzner_driver_version}_linux_amd64.tar.gz"
-  ui_url            = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/hetzner-node-driver-${var.hetzner_driver_version}.tgz"
-  whitelist_domains = ["api.hetzner.cloud"]
-
-  annotations = {
-    "privateCredentialFields" = "apiToken"
-  }
-
-  depends_on = [module.rancher]
-}
+# NOTE: Hetzner Node Driver is deployed via cloud-init manifest (02-hetzner-node-driver.yaml)
+# in local.rancher_server_manifests above. This gives explicit control over metadata.name
+# which is required for Rancher's provisioning controller to resolve the driver.
+# See: rancher2_node_driver naming bug documented in ARCHITECTURE.md Compromise Log.

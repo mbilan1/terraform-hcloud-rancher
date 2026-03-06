@@ -73,10 +73,10 @@ Each objective maps to specific implementation choices:
 | Objective | Implementation |
 |-----------|---------------|
 | Zero SSH | Cloud-init for RKE2 bootstrap + L4 manifests, no SSH provisioners, no kubeconfig output |
-| Single Apply | Cloud-init HelmChart CRDs + `rancher2_bootstrap` + `rancher2_node_driver` (2 providers only: `hcloud` + `rancher2`) |
+| Single Apply | Cloud-init HelmChart CRDs + cloud-init NodeDriver manifest + `rancher2_bootstrap` (2 providers only: `hcloud` + `rancher2`) |
 | Project Isolation | Separate Hetzner Cloud Projects per downstream cluster, separate `HCLOUD_TOKEN` per project, Rancher Cloud Credential encryption |
-| Native UI Provisioning | zsys-studio Machine Driver + Vue 3 UI Extension via `rancher2_node_driver` (`ui_url`) |
-| Driver Portability | NodeDriver registered via `rancher2_node_driver` — removable, upgradable without cluster rebuild |
+| Native UI Provisioning | zsys-studio Machine Driver + Vue 3 UI Extension via cloud-init NodeDriver manifest (`spec.uiUrl`) |
+| Driver Portability | NodeDriver registered via cloud-init manifest — removable, upgradable without cluster rebuild |
 
 ### Relationship to terraform-hcloud-rke2-core
 
@@ -95,7 +95,7 @@ This module builds on `terraform-hcloud-rke2-core` (composable primitive, True Z
 
 ## Module Architecture
 
-The module uses a **two-layer architecture**: L3 infrastructure (delegated to `terraform-hcloud-rke2-core`) and L4 bootstrap (Rancher admin setup + Hetzner Node Driver registration). All L4 **software** (cert-manager, Rancher Helm chart) is deployed via RKE2 cloud-init manifests.
+The module uses a **two-layer architecture**: L3 infrastructure (delegated to `terraform-hcloud-rke2-core`) and L4 bootstrap (Rancher admin setup). All L4 **software** (cert-manager, Rancher Helm chart, Hetzner Node Driver) is deployed via RKE2 cloud-init manifests.
 
 ```
 terraform-hcloud-rancher/                # Root module (facade)
@@ -138,15 +138,14 @@ terraform-hcloud-rancher/                # Root module (facade)
 |:-----:|-----------|----------------|-------|
 | L3 | `modules/rke2-cluster/` | Hetzner Cloud infrastructure (servers, network) | OpenTofu via `terraform-hcloud-rke2-core` |
 | L3 | Root (`/`) ingress LB | BYO ingress load balancer (ADR-003) | OpenTofu (`hcloud` provider) |
-| L4 | Root (`/`) cloud-init manifests | cert-manager + Rancher HelmChart CRDs | RKE2 HelmController (via `extra_server_manifests`) |
+| L4 | Root (`/`) cloud-init manifests | cert-manager + Rancher HelmChart CRDs + Hetzner Node Driver | RKE2 HelmController + deploy controller (via `extra_server_manifests`) |
 | L4 | `modules/rancher/` | Rancher admin bootstrap | OpenTofu (`rancher2` provider, bootstrap mode) |
-| L4 | Root (`/`) `rancher2_node_driver` | Hetzner Node Driver + UI extension | OpenTofu (`rancher2` provider, admin mode) |
 
 ### Design Decisions
 
 **L4 via cloud-init (not Helm provider)**: cert-manager and Rancher are deployed as RKE2 HelmChart CRDs placed in `/var/lib/rancher/rke2/server/manifests/` via cloud-init. This eliminates the need for `helm`, `kubernetes`, and `kubectl` Terraform providers entirely — rke2-core is True Zero-SSH and does not output kubeconfig, so those providers cannot authenticate.
 
-**NodeDriver via rancher2 provider (not cloud-init CRD)**: The NodeDriver and UIPlugin CRDs are deployed via `rancher2_node_driver` after bootstrap. Deploying them as raw cloud-init manifests caused RKE2's deploy controller to crash-loop because the CRDs don't exist until Rancher fully starts. The `rancher2_node_driver` resource includes `ui_url` which handles the UI extension.
+**NodeDriver via cloud-init manifest (not rancher2_node_driver)**: The NodeDriver CRD is deployed as a raw Kubernetes manifest via cloud-init (`02-hetzner-node-driver.yaml`). The `rancher2_node_driver` Terraform resource was abandoned because it auto-generates `metadata.name` as `nd-XXXXX`, but Rancher's provisioning controller derives the expected driver name from `machineConfigRef.kind` (`HetznerConfig` → `hetzner`) and looks up `nodedrivers.management.cattle.io` by `metadata.name`. The name mismatch causes downstream provisioning to fail with `"hetzner" not found`. The cloud-init manifest gives explicit control over `metadata.name: "hetzner"`. RKE2's deploy controller retries failed manifests until the `management.cattle.io` CRDs are registered by Rancher (~2-3 min after boot).
 
 **Root as facade, not shim**: The root module contains the ingress LB resources directly (inline, not in a submodule) and generates all cloud-init manifest content. This is necessary because the LB IP is needed for hostname auto-generation before `rke2_cluster` runs.
 
@@ -161,12 +160,9 @@ Root module (2 providers only)
     │   └── module.rke2_cluster
     │       └── module.cluster (rke2-core)       # servers, network, readiness
     │
-    ├── provider "rancher2" (bootstrap mode, insecure, timeout = "6m")
-    │   └── module.rancher
-    │       └── rancher2_bootstrap.admin          # admin password + token
-    │
-    └── provider "rancher2" alias "admin" (token-based, post-bootstrap)
-        └── rancher2_node_driver.hetzner          # Hetzner driver + UI extension
+    └── provider "rancher2" (bootstrap mode, insecure, timeout = "6m")
+        └── module.rancher
+            └── rancher2_bootstrap.admin          # admin password + token
 ```
 
 Providers are configured **in the root module only**. The `rancher2` provider runs in bootstrap mode — it only needs the Rancher URL (auto-generated from LB IP), no auth token. It polls until Rancher is ready, then sets the admin password.
@@ -241,17 +237,15 @@ flowchart LR
         direction TB
         lb["Ingress LB\n(BYO pattern)"]
         hostname["Auto-generate\nhostname"]
-        manifests["Generate cloud-init\nHelmChart CRDs"]
+        manifests["Generate cloud-init\nHelmChart CRDs + NodeDriver"]
         rke2["module.rke2_cluster\n(terraform-hcloud-rke2-core)"]
-        ready["RKE2 API readiness\n+ HelmController installs\ncert-manager + Rancher"]
+        ready["RKE2 API readiness\n+ HelmController installs\ncert-manager + Rancher\n+ deploy controller applies NodeDriver"]
         lb --> hostname --> manifests --> rke2 --> ready
     end
 
     subgraph phase2["Phase 2: Rancher Bootstrap"]
         direction TB
         boot["rancher2_bootstrap\n(admin password + token)"]
-        nd["rancher2_node_driver\n(zsys-studio + UI extension)"]
-        boot --> nd
     end
 
     phase1 --> phase2
@@ -261,9 +255,9 @@ flowchart LR
 
 1. **Ingress LB** — created inline in root `main.tf` (BYO pattern with `for_each` gating)
 2. **Hostname** — auto-generated from ingress LB IP via sslip.io (or user-provided FQDN)
-3. **Cloud-init manifests** — cert-manager + Rancher HelmChart CRDs generated in root `main.tf`
+3. **Cloud-init manifests** — cert-manager + Rancher HelmChart CRDs + Hetzner NodeDriver CRD generated in root `main.tf`
 4. **RKE2 cluster** — network, server, cloud-init deployment via `terraform-hcloud-rke2-core`
-5. **Readiness** — RKE2 API health check; HelmController installs cert-manager + Rancher from manifests
+5. **Readiness** — RKE2 API health check; HelmController installs cert-manager + Rancher; deploy controller applies NodeDriver manifest (retries until Rancher CRDs available)
 
 ```hcl
 # Cloud-init HelmChart CRDs (generated in root main.tf, passed to rke2-core)
@@ -308,6 +302,25 @@ locals {
                 source: ${var.tls_source}
       YAML
     },
+
+    # NodeDriver with explicit metadata.name: "hetzner"
+    {
+      "02-hetzner-node-driver.yaml" = <<-YAML
+        apiVersion: management.cattle.io/v3
+        kind: NodeDriver
+        metadata:
+          name: hetzner
+          annotations:
+            privateCredentialFields: "apiToken"
+        spec:
+          active: true
+          displayName: hetzner
+          url: "https://github.com/zsys-studio/.../docker-machine-driver-hetzner_${var.hetzner_driver_version}_linux_amd64.tar.gz"
+          uiUrl: "https://github.com/zsys-studio/.../hetzner-node-driver-${var.hetzner_driver_version}.tgz"
+          whitelistDomains:
+            - "api.hetzner.cloud"
+      YAML
+    },
   )
 }
 
@@ -323,7 +336,6 @@ module "rke2_cluster" {
 ### Phase 2: Rancher Bootstrap
 
 6. **`rancher2_bootstrap`** — polls Rancher URL until accessible, sets admin password
-7. **`rancher2_node_driver`** — registers zsys-studio Hetzner driver with `privateCredentialFields`
 
 ```hcl
 # modules/rancher/main.tf
@@ -331,22 +343,9 @@ resource "rancher2_bootstrap" "admin" {
   initial_password = var.admin_password
   password         = var.admin_password
 }
-
-resource "rancher2_node_driver" "hetzner" {
-  active            = true
-  builtin           = false
-  name              = "hetzner"
-  url               = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/..."
-  ui_url            = "https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases/download/v${var.hetzner_driver_version}/..."
-  whitelist_domains = ["api.hetzner.cloud"]
-
-  annotations = {
-    "privateCredentialFields" = "apiToken"
-  }
-
-  depends_on = [rancher2_bootstrap.admin]
-}
 ```
+
+The Hetzner NodeDriver is already installed at this point via the cloud-init manifest (`02-hetzner-node-driver.yaml`), with explicit `metadata.name: "hetzner"` matching what Rancher's provisioning controller expects.
 
 ---
 
@@ -657,8 +656,8 @@ The module contains deliberate compromises. Each is documented in code comments 
 | 1 | L4 via cloud-init (not Helm provider) | Declarative HelmChart CRDs vs direct Helm API | rke2-core is True Zero-SSH — no kubeconfig output, so helm/kubernetes providers cannot authenticate. Cloud-init HelmChart CRDs are the only option. |
 | 2 | Single management node default | HA vs resource usage | Management cluster runs only Rancher. HA (3 nodes) is for production, not default. |
 | 3 | zsys-studio driver (v0.8.0) | Stability vs functionality | Bus factor = 1. Code is well-tested (2.2:1 test ratio) and forkable if needed. |
-| 4 | NodeDriver via rancher2 provider (not cloud-init) | Deploy order vs simplicity | Deploying NodeDriver as cloud-init manifest caused RKE2 deploy controller crash-loops (CRD doesn't exist until Rancher starts). `rancher2_node_driver` deploys after bootstrap. |
-| 5 | UI Extension via `ui_url` on rancher2_node_driver | Automation vs manual | `rancher2_node_driver` supports `ui_url` natively — installs the UI extension alongside the driver binary. |
+| 4 | NodeDriver via cloud-init manifest (not rancher2_node_driver) | Deploy controller retries (~2-3 min log noise) vs correct metadata.name | `rancher2_node_driver` auto-generates `metadata.name` as `nd-XXXXX`, but Rancher's provisioning controller looks up `nodedrivers.management.cattle.io "hetzner"` by metadata.name (derived from `HetznerConfig` kind). Cloud-init manifest gives explicit `metadata.name: "hetzner"` control. |
+| 5 | UI Extension via `spec.uiUrl` on NodeDriver manifest | Automation vs manual | NodeDriver CRD supports `spec.uiUrl` natively — Rancher installs the UI extension alongside the driver binary. |
 | 6 | No automated CCM/CSI on downstream | Automation vs scope | Post-cluster HCCM/CSI install is manual per downstream cluster. Automating via Fleet/cluster-template is a roadmap item. |
 | 7 | Packer baked image for CIS | Build complexity vs runtime flexibility | CIS host prerequisites (etcd user, sysctl, kernel modules) must exist before RKE2 starts. Rancher-machine intercepts userData (treats value as file path). Packer snapshot with prerequisites baked in is the cleanest solution. Snapshots auto-named: `ubuntu-2404-rke2-{version}[-cis-l1]-{timestamp}`. |
 
@@ -684,8 +683,8 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [x] Integrate terraform-hcloud-rke2-core as management cluster source
 - [x] cert-manager + Rancher via cloud-init HelmChart CRDs
 - [x] rancher2_bootstrap (admin password, server URL)
-- [x] Hetzner NodeDriver via rancher2_node_driver
-- [x] UI Extension via rancher2_node_driver ui_url
+- [x] Hetzner NodeDriver via cloud-init manifest (explicit `metadata.name: "hetzner"`)
+- [x] UI Extension via NodeDriver `spec.uiUrl`
 - [x] sslip.io auto-hostname + BYO DNS support
 - [x] BYO ingress load balancer (for_each gating pattern)
 - [x] examples/minimal/ — single-node management cluster

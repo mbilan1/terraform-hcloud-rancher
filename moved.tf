@@ -33,13 +33,23 @@ moved {
   to   = hcloud_load_balancer_service.https["main"]
 }
 
-# DECISION: rancher2_node_driver moved from rancher child module to root.
-# Why: The rancher child module uses rancher2 provider in bootstrap mode,
-#      which only supports rancher2_bootstrap. The node_driver needs the
-#      rancher2.admin provider alias with post-bootstrap admin token auth.
-moved {
-  from = module.rancher.rancher2_node_driver.hetzner
-  to   = rancher2_node_driver.hetzner
+# DECISION: rancher2_node_driver replaced with cloud-init manifest.
+# Why: The rancher2_node_driver resource auto-generates metadata.name as
+#      "nd-XXXXX", but Rancher's provisioning controller looks up drivers by
+#      metadata.name derived from machineConfigRef.kind (HetznerConfig → "hetzner").
+#      The name mismatch causes "nodedrivers.management.cattle.io hetzner not found"
+#      errors during downstream cluster provisioning.
+# Fix: NodeDriver is now deployed via cloud-init raw manifest with explicit
+#      metadata.name: "hetzner" in local.rancher_server_manifests.
+# NOTE: destroy = false prevents OpenTofu from trying to delete the old
+#       nd-XXXXX NodeDriver (which would require the removed rancher2.admin
+#       provider). The stale CRD is harmless — operators can delete it manually.
+removed {
+  from = rancher2_node_driver.hetzner
+
+  lifecycle {
+    destroy = false
+  }
 }
 
 # DECISION: kubectl_manifest resources are removed (deployed via cloud-init now).

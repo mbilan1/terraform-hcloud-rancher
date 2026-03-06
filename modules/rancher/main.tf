@@ -48,6 +48,7 @@ resource "rancher2_bootstrap" "admin" {
   password         = var.admin_password
 }
 
-# NOTE: rancher2_node_driver moved to root main.tf — requires rancher2.admin
-# provider alias (non-bootstrap mode with admin token).
-# See: providers.tf for the dual-provider architecture.
+# NOTE: rancher2_node_driver replaced with cloud-init manifest deployment.
+# Why: The rancher2_node_driver resource auto-generates metadata.name ("nd-XXXXX")
+# but Rancher expects metadata.name: "hetzner" (derived from HetznerConfig kind).
+# NodeDriver is now in local.rancher_server_manifests (root main.tf).
