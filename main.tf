@@ -158,7 +158,7 @@ locals {
     # NOTE: RKE2's deploy controller retries failed manifests. This manifest will
     #      fail initially (management.cattle.io CRDs don't exist until Rancher
     #      starts) but self-heals once Rancher registers its CRDs (~2-3 min).
-    {
+    var.install_hetzner_driver ? {
       "02-hetzner-node-driver.yaml" = <<-YAML
         apiVersion: management.cattle.io/v3
         kind: NodeDriver
@@ -175,7 +175,7 @@ locals {
           whitelistDomains:
             - "api.hetzner.cloud"
       YAML
-    },
+    } : {},
   )
 }
 
@@ -278,12 +278,15 @@ resource "hcloud_load_balancer_service" "http" {
   listen_port      = 80
   destination_port = 80
 
+  # NOTE: Rancher bootstrap takes 3-6 minutes (cert-manager + Rancher Helm install).
+  # During initial deployment, backends will be marked unhealthy until the ingress
+  # controller is ready. Users will see 502 errors — this is expected and self-resolves.
   health_check {
     protocol = "tcp"
     port     = 80
-    interval = 10
+    interval = 15
     timeout  = 5
-    retries  = 3
+    retries  = 5
   }
 }
 
@@ -298,9 +301,9 @@ resource "hcloud_load_balancer_service" "https" {
   health_check {
     protocol = "tcp"
     port     = 443
-    interval = 10
+    interval = 15
     timeout  = 5
-    retries  = 3
+    retries  = 5
   }
 }
 

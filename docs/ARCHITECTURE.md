@@ -554,6 +554,16 @@ flowchart LR
 | zsys-studio driver SSH keys persist in Hetzner | Low | Auto-generated, manageable via Rancher |
 | No audit logging on management cluster | Medium | Enable Rancher audit log post-deploy |
 
+### ⚠️ State Encryption Requirement
+
+The admin password and `bootstrapPassword` are embedded in cloud-init `user_data`, which is stored in OpenTofu state. **You must encrypt state at rest:**
+
+- **S3 backend**: Enable server-side encryption (`encrypt = true`) and use a KMS key
+- **GCS backend**: Enable default encryption or use a customer-managed encryption key
+- **Local state**: Ensure the filesystem is encrypted; do not commit `terraform.tfstate` to version control
+
+After the initial deployment, rotate the admin password via Rancher UI to limit exposure of the bootstrap password.
+
 ---
 
 ## Why Rancher
@@ -644,6 +654,22 @@ Source: [Rancher installation requirements](https://ranchermanager.docs.rancher.
 | Small | 1 | 2 | cx23 | cx33 |
 | Medium | 3 | 3 | cx23 | cx43 |
 | Minimal | 1 | 0 | cx23 | — |
+
+---
+
+## Tested Version Combinations
+
+The following version combinations have been tested together. Using untested combinations may result in incompatibilities.
+
+| Rancher | RKE2 | cert-manager | Hetzner CCM | zsys-studio Driver | Status |
+|---------|------|-------------|-------------|-------------------|--------|
+| 2.13.3 | v1.34.4+rke2r1 | 1.17.2 | 1.30.1 | 0.8.0 | ✅ Tested (2026-03-05) |
+
+**Version update guidance:**
+- **Rancher ↔ RKE2**: Check [Rancher support matrix](https://www.suse.com/suse-rancher/support-matrix/) before upgrading either
+- **cert-manager**: Follow [cert-manager upgrade notes](https://cert-manager.io/docs/releases/) — CRD changes may require manual steps
+- **Hetzner CCM**: Must match the Kubernetes minor version (e.g. CCM 1.30.x for K8s 1.30.x)
+- **zsys-studio Driver**: Check [release notes](https://github.com/zsys-studio/rancher-hetzner-cluster-provider/releases) for Rancher version compatibility
 
 ---
 

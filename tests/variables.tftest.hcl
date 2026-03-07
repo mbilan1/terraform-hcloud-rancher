@@ -471,6 +471,31 @@ run "hetzner_driver_version_rejects_invalid" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V14: install_hetzner_driver — accepts true/false                      ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "install_hetzner_driver_accepts_true" {
+  command = plan
+
+  variables {
+    hcloud_api_token       = "mock-token"
+    rancher_hostname       = "rancher.example.com"
+    admin_password         = "SecurePassword123"
+    install_hetzner_driver = true
+  }
+}
+
+run "install_hetzner_driver_accepts_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token       = "mock-token"
+    rancher_hostname       = "rancher.example.com"
+    admin_password         = "SecurePassword123"
+    install_hetzner_driver = false
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  UT-V13: existing_ingress_lb_ipv4 — validates IP format                   ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "existing_lb_ip_rejects_invalid" {

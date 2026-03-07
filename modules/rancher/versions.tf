@@ -1,10 +1,9 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Rancher child module — required providers
 #
-# DECISION: Only rancher2 provider — kubectl removed.
-# Why: NodeDriver and UIPlugin are now deployed via raw YAML manifests in
-#      cloud-init (RKE2 deploy controller). The only operation requiring a
-#      Terraform provider is rancher2_bootstrap (admin password setup).
+# DECISION: Exact version pins (=) for reproducible deployments.
+# Why: Aligned with root module pin strategy. Prevents silent patch-level
+#      drift between root and child module provider constraints.
 # ──────────────────────────────────────────────────────────────────────────────
 
 terraform {
@@ -13,7 +12,7 @@ terraform {
   required_providers {
     rancher2 = {
       source  = "rancher/rancher2"
-      version = ">= 13.0.0"
+      version = "= 13.1.4"
     }
   }
 }
