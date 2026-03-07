@@ -55,8 +55,8 @@ Well-architected, production-ready Terraform module for deploying Rancher manage
 ### 6. Admin Password in OpenTofu State (Acknowledged)
 
 - **File**: `main.tf:19-41`
-- Admin password appears in plain text in state via cloud-init user_data. Documented compromise, but no mitigation guidance.
-- **Fix**: Document state encryption requirement and post-deploy password rotation.
+- Admin password appears in plain text in state via cloud-init user_data. Documented compromise with mitigation (encrypt state at rest) in `main.tf`, but this is not surfaced in README/user docs.
+- **Fix**: Surface the existing state encryption requirement prominently in user-facing docs (e.g., README) and document post-deploy admin password rotation.
 
 ### 7. Undocumented `rke2_config` Default Behavior
 
@@ -108,7 +108,7 @@ Well-architected, production-ready Terraform module for deploying Rancher manage
 - Excellent architecture documentation (ARCHITECTURE.md, 728 lines)
 - Code comments with DECISION/COMPROMISE/WORKAROUND prefixes
 - Zero-SSH design (no SSH keys, no provisioners, cloud-init only)
-- Provider consolidation (only hcloud + rancher2)
+- Minimal provider set (hcloud, rancher2, plus utility `hashicorp/random`; no helm/kubernetes/kubectl providers)
 - Delete protection hardcoded for management cluster
 - Offline test suite with mock providers
 
