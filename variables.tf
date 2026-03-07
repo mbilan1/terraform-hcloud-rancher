@@ -105,6 +105,13 @@ variable "cert_manager_version" {
 #  Hetzner Node Driver (zsys-studio)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+variable "install_hetzner_driver" {
+  description = "Install zsys-studio Hetzner Node Driver for downstream cluster provisioning via Rancher UI. Set to false if the driver is managed externally."
+  type        = bool
+  nullable    = false
+  default     = true
+}
+
 variable "hetzner_driver_version" {
   description = "Version of zsys-studio/rancher-hetzner-cluster-provider to install as Rancher Node Driver."
   type        = string

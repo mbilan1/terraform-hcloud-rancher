@@ -53,3 +53,18 @@ check "byo_ingress_lb_requires_hostname_or_ip" {
     error_message = "When create_ingress_lb = false, you must provide either rancher_hostname or existing_ingress_lb_ipv4 for hostname resolution."
   }
 }
+
+# ── Subnet must be contained within network CIDR ────────────────────────────
+
+# DECISION: Validate subnet containment at plan time instead of failing at apply.
+# Why: Hetzner API rejects subnets outside the network CIDR, but the error is
+#      cryptic. This guardrail provides a clear error message during plan.
+check "subnet_within_network_cidr" {
+  assert {
+    condition = (
+      tonumber(split("/", var.subnet_address)[1]) >= tonumber(split("/", var.hcloud_network_cidr)[1]) &&
+      cidrhost("${cidrhost(var.subnet_address, 0)}/${split("/", var.hcloud_network_cidr)[1]}", 0) == cidrhost(var.hcloud_network_cidr, 0)
+    )
+    error_message = "subnet_address (${var.subnet_address}) must be contained within hcloud_network_cidr (${var.hcloud_network_cidr})."
+  }
+}
