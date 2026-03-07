@@ -111,3 +111,28 @@ Well-architected, production-ready Terraform module for deploying Rancher manage
 - Provider consolidation (only hcloud + rancher2)
 - Delete protection hardcoded for management cluster
 - Offline test suite with mock providers
+
+---
+
+## Fix Verification Status (2026-03-07)
+
+Verified against commit `42ba086` ("fix: resolve code review findings") on `main`.
+
+| # | Issue | Severity | Status | Notes |
+|---|-------|----------|--------|-------|
+| 1 | Missing `install_hetzner_driver` variable | Critical | **NOT FIXED** | README still documents it; variable still absent |
+| 2 | RKE2 version mismatch in docs | Critical | **NOT FIXED** | terraform-docs not regenerated; README shows v1.32, code uses v1.34 |
+| 3 | Subnet not validated against network CIDR | High | **PARTIAL** | CIDR syntax validated; containment check not added to guardrails.tf |
+| 4 | Overly permissive firewall in example | High | **NOT FIXED** | examples/minimal still opens 6443 to 0.0.0.0/0 |
+| 5 | LB health check during startup | High | **NOT FIXED** | No retry increase or documentation added |
+| 6 | Admin password in state | Medium | **FIXED** | COMPROMISE comment added to main.tf with mitigation guidance |
+| 7 | Undocumented rke2_config default | Medium | **NOT FIXED** | etcd snapshot defaults still undocumented |
+| 8 | Missing version compatibility matrix | Medium | **NOT FIXED** | No matrix in ARCHITECTURE.md |
+| 9 | Let's Encrypt validation gap | Medium | **FIXED** | Email @ validation added to variables.tf |
+| 10 | Indefinite cleanup TODOs | Low | **NOT FIXED** | No deadline added |
+| 11 | Port 80 health check assumptions | Low | **NOT FIXED** | No documentation added |
+| 12 | Missing labels on LB network | Low | **NOT FIXED** | hcloud_load_balancer_network still unlabeled |
+
+**Additional fixes applied** (beyond review scope): heredoc escaping fix, IP validation via cidrhost(), node_location allowlist validation, random provider declaration, unused rancher_url output removed, 7 new tests (42 total).
+
+**Summary**: 2/12 fully fixed, 1 partial, 9 not fixed. Critical items remain open.
