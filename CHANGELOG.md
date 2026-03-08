@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Rancher installation**: cert-manager + Rancher Helm chart deployed via cloud-init HelmChart CRDs
 - **Admin bootstrap**: `rancher2_bootstrap` resource sets admin password and server URL
 - **TLS sources**: Self-signed (Rancher CA), Let's Encrypt, or user-provided certificate
-- **Hetzner Node Driver**: [zsys-studio/rancher-hetzner-cluster-provider](https://github.com/zsys-studio/rancher-hetzner-cluster-provider) v0.8.0 installed via cloud-init raw manifest (`metadata.name: hetzner`)
+- **Hetzner Node Driver**: [zsys-studio/rancher-hetzner-cluster-provider](https://github.com/zsys-studio/rancher-hetzner-cluster-provider) v0.9.0 installed via cloud-init raw manifest (`metadata.name: hetzner`)
 - **Dual Load Balancer**: Control-plane LB (ports 6443, 9345) + Ingress LB (ports 80, 443)
 - **BYO ingress LB**: `create_ingress_lb = false` + `existing_ingress_lb_ipv4` for BYO pattern
 - **sslip.io auto-hostname**: Auto-generates `rancher.<LB_IP>.sslip.io` — zero DNS setup

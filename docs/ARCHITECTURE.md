@@ -448,7 +448,7 @@ helm install hcloud-csi hcloud/hcloud-csi-driver \
 |----------|-------|
 | Repository | [zsys-studio/rancher-hetzner-cluster-provider](https://github.com/zsys-studio/rancher-hetzner-cluster-provider) |
 | Fork (snapshot fix) | [mbilan1/rancher-hetzner-cluster-provider](https://github.com/mbilan1/rancher-hetzner-cluster-provider) |
-| Version | v0.8.0 (Feb 2026) — fork tag `v0.8.1-snapshot-fix` adds image-by-ID support |
+| Version | v0.9.0 (Mar 2026) — snapshot image support, image-by-ID resolution |
 | License | Apache-2.0 |
 | Language | Go 88.7%, Vue 7.8% |
 | Dependencies | `hcloud-go/v2 v2.36.0`, `rancher/machine v0.15.0-rancher134` |
@@ -492,7 +492,7 @@ The driver manages a **shared cluster firewall** automatically:
 | Dependencies | Current — hcloud-go v2.36.0, rancher/machine v0.15.0-rancher134 |
 | CI/CD | GoReleaser + GitHub Actions, checksums |
 | Bus factor | 1 primary author — small project, code is well-structured and forkable if needed |
-| Maturity | v0.8.0, not v1.0 yet |
+| Maturity | v0.9.0, not v1.0 yet |
 
 ---
 
@@ -663,7 +663,7 @@ The following version combinations have been tested together. Using untested com
 
 | Rancher | RKE2 | cert-manager | Hetzner CCM | zsys-studio Driver | Status |
 |---------|------|-------------|-------------|-------------------|--------|
-| 2.13.3 | v1.34.4+rke2r1 | 1.17.2 | 1.30.1 | 0.8.0 | ✅ Tested (2026-03-05) |
+| 2.13.3 | v1.34.4+rke2r1 | 1.17.2 | 1.30.1 | 0.9.0 | ✅ Tested (2026-03-08) |
 
 **Version update guidance:**
 - **Rancher ↔ RKE2**: Check [Rancher support matrix](https://www.suse.com/suse-rancher/support-matrix/) before upgrading either
@@ -681,7 +681,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 |---|----------|-----------|-----------|
 | 1 | L4 via cloud-init (not Helm provider) | Declarative HelmChart CRDs vs direct Helm API | rke2-core is True Zero-SSH — no kubeconfig output, so helm/kubernetes providers cannot authenticate. Cloud-init HelmChart CRDs are the only option. |
 | 2 | Single management node default | HA vs resource usage | Management cluster runs only Rancher. HA (3 nodes) is for production, not default. |
-| 3 | zsys-studio driver (v0.8.0) | Stability vs functionality | Bus factor = 1. Code is well-tested (2.2:1 test ratio) and forkable if needed. |
+| 3 | zsys-studio driver (v0.9.0) | Stability vs functionality | Bus factor = 1. Code is well-tested (2.2:1 test ratio) and forkable if needed. |
 | 4 | NodeDriver via cloud-init manifest (not rancher2_node_driver) | Deploy controller retries (~2-3 min log noise) vs correct metadata.name | `rancher2_node_driver` auto-generates `metadata.name` as `nd-XXXXX`, but Rancher's provisioning controller looks up `nodedrivers.management.cattle.io "hetzner"` by metadata.name (derived from `HetznerConfig` kind). Cloud-init manifest gives explicit `metadata.name: "hetzner"` control. |
 | 5 | UI Extension via `spec.uiUrl` on NodeDriver manifest | Automation vs manual | NodeDriver CRD supports `spec.uiUrl` natively — Rancher installs the UI extension alongside the driver binary. |
 | 6 | No automated CSI on downstream | Automation vs scope | CCM is now automated via cluster template `additionalManifest`. CSI install remains manual per downstream cluster. Automating CSI via Fleet/cluster-template is a roadmap item. |

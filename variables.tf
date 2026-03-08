@@ -116,11 +116,11 @@ variable "hetzner_driver_version" {
   description = "Version of zsys-studio/rancher-hetzner-cluster-provider to install as Rancher Node Driver."
   type        = string
   nullable    = false
-  default     = "0.8.0"
+  default     = "0.9.0"
 
   validation {
     condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.hetzner_driver_version))
-    error_message = "hetzner_driver_version must be a semantic version (e.g. '0.8.0')."
+    error_message = "hetzner_driver_version must be a semantic version (e.g. '0.9.0')."
   }
 }
 
