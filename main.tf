@@ -26,6 +26,10 @@
 #      which goes into hcloud_server.user_data. Hetzner stores user_data in its
 #      API and OpenTofu stores it in state. This is unavoidable without
 #      eliminating cloud-init for L4 deployment. Mitigation: encrypt state at rest.
+# NOTE: Uses `count` instead of `for_each` deliberately.
+# Why: var.admin_password is sensitive — OpenTofu forbids sensitive values in
+#      for_each keys because the key would be exposed in the resource address.
+#      count with a ternary on sensitive is allowed (the index is always [0]).
 resource "random_password" "admin" {
   count   = var.admin_password == "" ? 1 : 0
   length  = 24
