@@ -684,7 +684,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 | 3 | zsys-studio driver (v0.8.0) | Stability vs functionality | Bus factor = 1. Code is well-tested (2.2:1 test ratio) and forkable if needed. |
 | 4 | NodeDriver via cloud-init manifest (not rancher2_node_driver) | Deploy controller retries (~2-3 min log noise) vs correct metadata.name | `rancher2_node_driver` auto-generates `metadata.name` as `nd-XXXXX`, but Rancher's provisioning controller looks up `nodedrivers.management.cattle.io "hetzner"` by metadata.name (derived from `HetznerConfig` kind). Cloud-init manifest gives explicit `metadata.name: "hetzner"` control. |
 | 5 | UI Extension via `spec.uiUrl` on NodeDriver manifest | Automation vs manual | NodeDriver CRD supports `spec.uiUrl` natively — Rancher installs the UI extension alongside the driver binary. |
-| 6 | No automated CCM/CSI on downstream | Automation vs scope | Post-cluster HCCM/CSI install is manual per downstream cluster. Automating via Fleet/cluster-template is a roadmap item. |
+| 6 | No automated CSI on downstream | Automation vs scope | CCM is now automated via cluster template `additionalManifest`. CSI install remains manual per downstream cluster. Automating CSI via Fleet/cluster-template is a roadmap item. |
 | 7 | Packer baked image for CIS | Build complexity vs runtime flexibility | CIS host prerequisites (etcd user, sysctl, kernel modules) must exist before RKE2 starts. Rancher-machine intercepts userData (treats value as file path). Packer snapshot with prerequisites baked in is the cleanest solution. Snapshots auto-named: `ubuntu-2404-rke2-{version}[-cis-l1]-{timestamp}`. |
 
 ---
