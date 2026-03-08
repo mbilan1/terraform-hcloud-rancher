@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **CI/CD**: Gate 0 (lint + SAST) and Gate 1 (unit tests) GitHub Actions workflows (ADR-010)
+- **examples/complete/**: HA 3-node management cluster with BYO firewall, Let's Encrypt TLS, Packer image support, and conditional etcd S3 backup
+- **Operations Guide**: Backup & restore section (etcd snapshots, S3 backup, restore procedure, Rancher Backup Operator)
+- **Operations Guide**: Monitoring & observability section (Rancher Monitoring, resource sizing, external integration)
+
+### Changed
+
+- **Module source**: `terraform-hcloud-rke2-core` switched from local path to git reference `v0.1.0`
+- **Roadmap**: Marked mid-term items as complete (HA example, BYO firewall, backup/restore, monitoring)
+
 ## [0.1.0] - 2026-03-06
 
 ### Added

@@ -727,10 +727,10 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [x] RKE2 v1.34.4+rke2r1 across all repos
 - [x] CI pipeline — Gate 0 (lint/SAST) + Gate 1 (unit tests) across all 4 repos (ADR-010)
 - [x] examples/complete/ — HA + BYO firewall + Let's Encrypt + Packer image + etcd S3 backup
-- [ ] HA management cluster (3 nodes)
-- [ ] BYO firewall example for management cluster (ADR-006)
-- [ ] Rancher backup/restore configuration
-- [ ] Monitoring stack on management cluster
+- [x] HA management cluster (3 nodes) — demonstrated in examples/complete/
+- [x] BYO firewall example for management cluster (ADR-006) — examples/complete/
+- [x] Rancher backup/restore configuration — Operations Guide section below
+- [x] Monitoring stack on management cluster — Operations Guide section below
 
 ### Long-term (automation + maturity)
 
