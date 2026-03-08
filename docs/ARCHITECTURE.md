@@ -737,8 +737,8 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [ ] Fleet/cluster-template for automated HCCM/CSI on downstream clusters
 - [ ] Rancher Cloud Credential management via Terraform (rancher2_cloud_credential)
 - [ ] Rancher SAML/OIDC integration template
-- [ ] Network policies on management cluster
-- [ ] Audit logging configuration
+- [x] Network policies on management cluster — Operations Guide section
+- [x] Audit logging configuration — Operations Guide section
 
 ---
 
@@ -825,6 +825,77 @@ For enterprise setups, integrate with external observability platforms:
 - **Prometheus remote-write**: Configure Rancher Monitoring to remote-write to your central Prometheus/Thanos/Mimir
 - **Log forwarding**: Use Rancher Logging (Fluentd/Fluent Bit) to forward to Elasticsearch, Loki, or cloud SIEM
 - **Alerting**: Configure AlertManager rules in Rancher Monitoring for production alerts
+
+### Audit Logging
+
+RKE2 supports Kubernetes audit logging to track API server requests. Enable it via `rke2_config`:
+
+```yaml
+audit-policy-file: /etc/rancher/rke2/audit-policy.yaml
+```
+
+The audit policy file must be placed on the node before RKE2 starts. For Packer-baked images, include it in the image build. For stock images, use cloud-init `write_files`:
+
+```yaml
+# Example audit policy (minimal — log metadata only)
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  - level: Metadata
+    resources:
+      - group: ""
+        resources: ["secrets", "configmaps"]
+  - level: RequestResponse
+    users: ["system:admin"]
+    verbs: ["create", "update", "delete"]
+  - level: None
+    resources:
+      - group: ""
+        resources: ["events"]
+  - level: Metadata
+```
+
+Audit logs are written to `/var/lib/rancher/rke2/server/logs/audit.log`. Forward them to your SIEM via Rancher Logging (Fluent Bit) for centralized analysis.
+
+### Network Policies
+
+RKE2 ships with Canal (Calico + Flannel) by default, which supports NetworkPolicy enforcement. Recommended baseline policies for the management cluster:
+
+1. **Default deny ingress** in `cattle-system` namespace (allow only Rancher ingress)
+2. **Allow inter-namespace** traffic for `kube-system`, `cattle-system`, `cert-manager`
+3. **Restrict egress** from monitoring namespace to known endpoints only
+
+Example default-deny policy for `cattle-system`:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: cattle-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-rancher-ingress
+  namespace: cattle-system
+spec:
+  podSelector:
+    matchLabels:
+      app: rancher
+  ingress:
+    - ports:
+        - port: 443
+          protocol: TCP
+  policyTypes:
+    - Ingress
+```
+
+Deploy network policies post-bootstrap via Rancher UI (Cluster → Projects/Namespaces → Network Policies) or via Fleet/GitOps.
 
 ---
 

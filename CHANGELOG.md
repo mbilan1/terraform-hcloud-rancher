@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **examples/complete/**: HA 3-node management cluster with BYO firewall, Let's Encrypt TLS, Packer image support, and conditional etcd S3 backup
 - **Operations Guide**: Backup & restore section (etcd snapshots, S3 backup, restore procedure, Rancher Backup Operator)
 - **Operations Guide**: Monitoring & observability section (Rancher Monitoring, resource sizing, external integration)
+- **Operations Guide**: Audit logging section (RKE2 audit policy configuration, log forwarding)
+- **Operations Guide**: Network policies section (default-deny baseline, Canal/Calico enforcement)
 
 ### Changed
 
