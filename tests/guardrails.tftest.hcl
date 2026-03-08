@@ -276,22 +276,11 @@ run "create_lb_accepts_no_hostname" {
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  UT-G05: subnet_within_network_cidr                                        ║
-# ║  Subnet must be contained within the network CIDR                          ║
+# ║  Negative tests omitted — child module (rke2-core) fires the same check    ║
+# ║  and OpenTofu cannot expect_failures from child modules.                    ║
+# ║  Subnet containment is fully tested in rke2-core/tests/guardrails.tftest.  ║
+# ║  The local check in guardrails.tf still provides early warnings.            ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
-run "subnet_rejects_outside_network" {
-  command = plan
-
-  variables {
-    hcloud_api_token    = "mock-token"
-    rancher_hostname    = "rancher.example.com"
-    admin_password      = "SecurePassword123"
-    hcloud_network_cidr = "10.0.0.0/16"
-    subnet_address      = "192.168.1.0/24"
-  }
-
-  expect_failures = [check.subnet_within_network_cidr]
-}
-
 run "subnet_accepts_within_network" {
   command = plan
 
@@ -302,18 +291,4 @@ run "subnet_accepts_within_network" {
     hcloud_network_cidr = "10.0.0.0/16"
     subnet_address      = "10.0.1.0/24"
   }
-}
-
-run "subnet_rejects_wider_than_network" {
-  command = plan
-
-  variables {
-    hcloud_api_token    = "mock-token"
-    rancher_hostname    = "rancher.example.com"
-    admin_password      = "SecurePassword123"
-    hcloud_network_cidr = "10.0.0.0/24"
-    subnet_address      = "10.0.0.0/16"
-  }
-
-  expect_failures = [check.subnet_within_network_cidr]
 }
