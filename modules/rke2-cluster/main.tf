@@ -9,16 +9,14 @@
 #        - for_each over count — stable node identity
 # See: https://github.com/mbilan1/rke2-hetzner-architecture/blob/main/decisions/adr-002-true-zero-ssh.md
 #
-# DECISION: Source is a local path to sibling repository.
-# Why: rke2-core lives at the same workdir level. Local path avoids git fetch
-#      on every init and keeps development cycle fast. Replace with a git URL
-#      or registry source when both repos are ready for a stable release.
-# TODO: Switch to git tag reference when rke2-core publishes v1.0.0
-#        source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=v1.0.0"
+# DECISION: Source pinned to git tag for reproducible builds.
+# Why: Using a tagged git reference ensures consumers get a known-good version.
+#      For local development, temporarily override with a local path:
+#        source = "../../../terraform-hcloud-rke2-core"
 # ──────────────────────────────────────────────────────────────────────────────
 
 module "cluster" {
-  source = "../../../terraform-hcloud-rke2-core"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=v0.1.0"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
