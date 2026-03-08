@@ -725,11 +725,12 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [x] Snapshot naming convention: `ubuntu-2404-rke2-{version}[-cis-l1]-{timestamp}`
 - [x] Cluster template Helm chart with CCM/CSI/RBAC/CIS toggle (v0.5.0)
 - [x] RKE2 v1.34.4+rke2r1 across all repos
+- [x] CI pipeline — Gate 0 (lint/SAST) + Gate 1 (unit tests) across all 4 repos (ADR-010)
+- [x] examples/complete/ — HA + BYO firewall + Let's Encrypt + Packer image + etcd S3 backup
 - [ ] HA management cluster (3 nodes)
 - [ ] BYO firewall example for management cluster (ADR-006)
 - [ ] Rancher backup/restore configuration
 - [ ] Monitoring stack on management cluster
-- [ ] CI pipeline (lint, validate, test)
 
 ### Long-term (automation + maturity)
 
@@ -738,6 +739,92 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [ ] Rancher SAML/OIDC integration template
 - [ ] Network policies on management cluster
 - [ ] Audit logging configuration
+
+---
+
+## Operations Guide
+
+### Backup & Restore
+
+The management cluster uses two complementary backup mechanisms:
+
+#### etcd Snapshots (Built-in)
+
+RKE2 automatically manages local etcd snapshots. Default configuration (set via `rke2_config`):
+
+```yaml
+etcd-snapshot-schedule-cron: "0 */6 * * *"   # Every 6 hours
+etcd-snapshot-retention: 10                   # Keep 10 snapshots
+```
+
+Local snapshots are stored at `/var/lib/rancher/rke2/server/db/snapshots/` on control plane nodes. These protect against etcd corruption but NOT disk failure (data is co-located).
+
+#### etcd S3 Backup (Recommended for Production)
+
+For disaster recovery, configure S3-compatible backup (e.g. Hetzner Object Storage):
+
+```yaml
+etcd-s3: true
+etcd-s3-endpoint: "fsn1.your-objectstorage.com"
+etcd-s3-bucket: "rancher-etcd-backup"
+etcd-s3-access-key: "<access-key>"
+etcd-s3-secret-key: "<secret-key>"
+etcd-s3-region: "eu-central"
+```
+
+Pass this via the `rke2_config` variable. See `examples/complete/` for a working example with conditional S3.
+
+#### Restore Procedure
+
+1. **Stop RKE2** on all nodes except the restore target
+2. **Restore snapshot**: `rke2 server --cluster-reset --cluster-reset-restore-path=<snapshot>`
+3. **Restart RKE2** on the restored node
+4. **Rejoin remaining nodes** by restarting their RKE2 services
+
+Full procedure: [RKE2 etcd Backup/Restore](https://docs.rke2.io/datastore/backup_restore)
+
+#### Rancher Backup Operator (Optional)
+
+For Rancher-specific resources (cluster configs, catalog entries, users), install the `rancher-backup` operator on the management cluster:
+
+1. In Rancher UI → Apps → Charts → search "Rancher Backups"
+2. Install into default namespace
+3. Create a `Backup` CR with your S3 target
+
+This backs up Rancher CRDs and their state, separate from etcd. Useful for Rancher migration to a new cluster.
+
+### Monitoring & Observability
+
+#### Built-in Rancher Monitoring
+
+Rancher ships with an integrated monitoring stack (Prometheus + Grafana) available as a Rancher App:
+
+1. In Rancher UI → Cluster → Apps → Charts → search "Monitoring"
+2. Install `rancher-monitoring` into the management cluster
+3. Access Grafana dashboards from Rancher UI → Monitoring
+
+This provides:
+- Node/pod resource metrics
+- etcd health and performance
+- Kubernetes API server metrics
+- Pre-built dashboards for cluster overview
+
+#### Minimum Resources for Monitoring
+
+| Component | CPU Request | Memory Request |
+|-----------|-------------|----------------|
+| Prometheus | 750m | 750Mi |
+| Grafana | 100m | 128Mi |
+| Node Exporter | 100m per node | 30Mi per node |
+
+**Recommendation**: For monitoring on the management cluster, use at least `cx43` (8 vCPU, 16 GB RAM) per node to have headroom for Rancher + monitoring together.
+
+#### External Monitoring
+
+For enterprise setups, integrate with external observability platforms:
+- **Prometheus remote-write**: Configure Rancher Monitoring to remote-write to your central Prometheus/Thanos/Mimir
+- **Log forwarding**: Use Rancher Logging (Fluentd/Fluent Bit) to forward to Elasticsearch, Loki, or cloud SIEM
+- **Alerting**: Configure AlertManager rules in Rancher Monitoring for production alerts
 
 ---
 
