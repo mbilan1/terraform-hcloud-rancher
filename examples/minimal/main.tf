@@ -78,6 +78,9 @@ resource "hcloud_firewall" "management" {
   }
 
   # K8s API — needed for kubectl access (no CP LB in single-node setup)
+  # WARNING: This opens the K8s API to the entire internet for dev/test simplicity.
+  # For production, restrict source_ips to your operator IP(s) or VPN CIDR,
+  # e.g. source_ips = ["203.0.113.10/32"].
   rule {
     direction  = "in"
     protocol   = "tcp"
