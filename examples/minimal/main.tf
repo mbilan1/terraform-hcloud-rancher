@@ -47,11 +47,13 @@ module "rancher_management" {
   control_plane_server_type = "cpx42"
   node_location             = "hel1"
 
-  # ── CIS hardening (RKE2 profile) ───────────────────────────────────────────
+  # ── RKE2 config ──────────────────────────────────────────────────────────────
+  # NOTE: CIS profile (profile: cis) requires cloud-init pre-setup (etcd user,
+  #       kernel params) or a pre-baked Packer image. Use enable_cis_profile
+  #       variable when available. See: cis-hardening branch.
   rke2_config = <<-EOT
     etcd-snapshot-schedule-cron: "0 */6 * * *"
     etcd-snapshot-retention: 10
-    profile: cis
   EOT
 
   # ── Firewall (BYO) ─────────────────────────────────────────────────────────
