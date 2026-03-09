@@ -355,8 +355,7 @@ module "rancher" {
   source = "./modules/rancher"
 
   # Rancher configuration
-  rancher_hostname = local.effective_hostname
-  admin_password   = local.effective_admin_password
+  admin_password = local.effective_admin_password
 
   # DECISION: Explicit dependency on L3 infrastructure + ingress LB services.
   # Why: rancher2_bootstrap polls the Rancher URL via HTTPS.

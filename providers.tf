@@ -50,6 +50,7 @@ provider "rancher2" {
 #      No resources use this alias — it exists only for migration.
 # TODO: Remove after all known deployments have applied this version (removing
 #       the rancher2_node_driver from their state).
+# tflint-ignore: terraform_unused_declarations
 provider "rancher2" {
   alias     = "admin"
   api_url   = "https://${local.effective_hostname}"

@@ -12,12 +12,6 @@
 #  Rancher bootstrap configuration
 # ═══════════════════════════════════════════════════════════════════════════════
 
-variable "rancher_hostname" {
-  description = "Fully qualified domain name for the Rancher UI (e.g. 'rancher.example.com')."
-  type        = string
-  nullable    = false
-}
-
 variable "admin_password" {
   description = "Initial password for the Rancher 'admin' user."
   type        = string
