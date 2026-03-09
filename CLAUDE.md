@@ -235,6 +235,24 @@ Full architectural context is maintained in a separate repository:
 
 ---
 
+## Workflow: Updating Version Badges
+
+README.md contains version badges (shields.io) that must stay in sync with `versions.tf`.
+
+| Badge | Source of truth | Badge URL parameter |
+|---|---|---|
+| OpenTofu | `versions.tf` → `required_version` | `OpenTofu-<version>` |
+| hcloud | `versions.tf` → `required_providers.hcloud.version` | `hcloud-<version>` |
+| rancher2 | `versions.tf` → `required_providers.rancher2.version` | `rancher2-<version>` |
+| random | `versions.tf` → `required_providers.random.version` | `random-<version>` |
+
+When bumping a provider version:
+1. Update `versions.tf`
+2. Update the matching badge URL in README.md (search for `img.shields.io/badge/<name>`)
+3. Run `tofu validate && tofu test`
+
+---
+
 ## Language
 
 - **Code & comments**: English
