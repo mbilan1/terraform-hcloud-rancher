@@ -54,6 +54,7 @@ rke2-core (L3 infra) → rancher (L3+L4 management) → cluster-templates (downs
 - **Hetzner Node Driver** — [zsys-studio/rancher-hetzner-cluster-provider](https://github.com/zsys-studio/rancher-hetzner-cluster-provider) installed via cloud-init
 - **TLS flexibility** — self-signed (Rancher CA), Let's Encrypt, or user-provided certificate
 - **Dual Load Balancer** — control-plane LB (K8s API) + ingress LB (Rancher UI)
+- **CIS hardening** — optional RKE2 CIS 1.23 profile via `enable_cis` with automatic PSA exemptions for Rancher
 - **2 providers only** — `hcloud` + `rancher2` (all L4 via cloud-init manifests)
 
 ## Requirements
