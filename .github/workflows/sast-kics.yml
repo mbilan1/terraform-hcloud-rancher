@@ -21,4 +21,6 @@ jobs:
           type: Terraform
           fail_on: high
           output_formats: json
-          exclude_queries: "e38a8e0a-b88b-4902-b3fe-b0571e3c97ec"
+          # e38a8e0a: "Variable without type" — OpenTofu check{} blocks confuse KICS parser
+          # a88baa34: "Generic Password" — false positive on admin_password = local.effective_admin_password (reference, not literal)
+          exclude_queries: "e38a8e0a-b88b-4902-b3fe-b0571e3c97ec,a88baa34-e2ad-44ea-ad6f-8cac87bc7c71"
