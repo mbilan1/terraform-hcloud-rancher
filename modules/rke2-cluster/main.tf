@@ -16,7 +16,7 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 module "cluster" {
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=v0.1.0"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=v0.1.1"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
