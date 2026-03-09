@@ -92,6 +92,13 @@ variable "rke2_config" {
   nullable    = false
 }
 
+variable "cis_profile" {
+  description = "Enable RKE2 CIS 1.23 profile with OS-level prerequisites."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 # DECISION: extra_server_manifests passed through from root module.
 # Why: Allows root module to inject HelmChart CRDs (cert-manager, Rancher) into
 #      the cloud-init manifests directory. RKE2 HelmController installs them

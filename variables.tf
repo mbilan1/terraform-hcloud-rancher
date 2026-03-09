@@ -282,8 +282,10 @@ variable "hcloud_image" {
 variable "rke2_config" {
   # DECISION: Passthrough for additional RKE2 server config.
   # Why: Enables operators to configure etcd S3 backup, audit logging,
-  #      CIS profile, and other RKE2 server settings without modifying
-  #      the module. Content is appended to every node's config.yaml.
+  #      and other RKE2 server settings without modifying the module.
+  #      Content is appended to every node's config.yaml.
+  # NOTE: CIS profile is handled separately via enable_cis_profile.
+  #       Do NOT add 'profile: cis' here — use enable_cis_profile instead.
   # NOTE: Default enables aggressive local etcd snapshots for management clusters.
   description = "Additional RKE2 config.yaml content appended to every management cluster node."
   type        = string
@@ -292,6 +294,18 @@ variable "rke2_config" {
     etcd-snapshot-schedule-cron: "0 */6 * * *"
     etcd-snapshot-retention: 10
   EOT
+}
+
+variable "enable_cis_profile" {
+  # DECISION: CIS profile as a first-class boolean, not a rke2_config string.
+  # Why: RKE2 CIS profile requires OS-level prerequisites (etcd user, kernel
+  #      params) that must be applied BEFORE rke2-server starts. A boolean
+  #      ensures the cloud-init template handles prereqs and config atomically.
+  # See: https://docs.rke2.io/security/hardening_guide
+  description = "Enable RKE2 CIS 1.23 hardening profile. Automatically creates etcd user, sets kernel parameters, and adds 'profile: cis' to RKE2 config."
+  type        = bool
+  nullable    = false
+  default     = false
 }
 
 variable "rke2_version" {

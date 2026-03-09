@@ -16,7 +16,9 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 module "cluster" {
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=v0.1.1"
+  # WORKAROUND: Using local path during cis-hardening development.
+  # TODO: Revert to git tag after rke2-core publishes cis_profile support.
+  source = "../../../terraform-hcloud-rke2-core"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
@@ -45,6 +47,7 @@ module "cluster" {
   # ── RKE2 ─────────────────────────────────────────────────────────────────
   rke2_version = var.rke2_version
   rke2_config  = var.rke2_config
+  cis_profile  = var.cis_profile
 
   # ── Firewall (BYO passthrough) ──────────────────────────────────────────
   firewall_ids = var.firewall_ids

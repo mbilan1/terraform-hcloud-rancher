@@ -571,3 +571,43 @@ run "letsencrypt_email_rejects_invalid" {
 
   expect_failures = [var.letsencrypt_email]
 }
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V17: enable_cis_profile — accepts true/false                          ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "cis_profile_default_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+  }
+
+  assert {
+    condition     = var.enable_cis_profile == false
+    error_message = "enable_cis_profile should default to false."
+  }
+}
+
+run "cis_profile_accepts_true" {
+  command = plan
+
+  variables {
+    hcloud_api_token   = "mock-token"
+    rancher_hostname   = "rancher.example.com"
+    admin_password     = "SecurePassword123"
+    enable_cis_profile = true
+  }
+}
+
+run "cis_profile_accepts_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token   = "mock-token"
+    rancher_hostname   = "rancher.example.com"
+    admin_password     = "SecurePassword123"
+    enable_cis_profile = false
+  }
+}
