@@ -1,5 +1,11 @@
 # terraform-hcloud-rancher
 
+[![Lint: fmt](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-fmt.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-fmt.yml)
+[![Lint: validate](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-validate.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-validate.yml)
+[![Test: variables](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-variables.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-variables.yml)
+[![Test: guardrails](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-guardrails.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-guardrails.yml)
+[![SAST: Checkov](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-checkov.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-checkov.yml)
+
 > **⚠️ Experimental (Beta)** — This is an **unofficial** community implementation, under active development and **not production-ready**.
 > APIs, variables, and behavior may change without notice. Use at your own risk.
 > No stability guarantees are provided until v1.0.0.
