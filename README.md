@@ -2,9 +2,17 @@
 
 [![Lint: fmt](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-fmt.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-fmt.yml)
 [![Lint: validate](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-validate.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-validate.yml)
+[![Lint: tflint](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-tflint.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-tflint.yml)
+
+[![SAST: Checkov](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-checkov.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-checkov.yml)
+[![SAST: KICS](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-kics.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-kics.yml)
+[![SAST: tfsec](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-tfsec.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-tfsec.yml)
+
 [![Test: variables](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-variables.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-variables.yml)
 [![Test: guardrails](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-guardrails.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/unit-guardrails.yml)
-[![SAST: Checkov](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-checkov.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/sast-checkov.yml)
+
+[![Integration: plan](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/integration-plan.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/integration-plan.yml)
+[![E2E: apply](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/e2e-apply.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/e2e-apply.yml)
 
 <!-- Version badges — source: versions.tf (required_version, required_providers), variables.tf (rke2_version) -->
 ![OpenTofu](https://img.shields.io/badge/OpenTofu-%3E%3D1.8.0-844FBA?logo=opentofu&logoColor=white)

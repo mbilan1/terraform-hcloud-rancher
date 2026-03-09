@@ -1,0 +1,29 @@
+name: "Integration: plan"
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: tofu plan (examples/minimal)
+    runs-on: ubuntu-latest
+    if: vars.HAS_CLOUD_CREDENTIALS == 'true'
+    defaults:
+      run:
+        working-directory: examples/minimal
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1.0.8
+      - run: tofu init
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+      - run: tofu plan -no-color -input=false
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_hcloud_api_token: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_admin_password: "ci-plan-placeholder-pw1!"

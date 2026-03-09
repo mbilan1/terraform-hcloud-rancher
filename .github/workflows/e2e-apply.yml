@@ -1,0 +1,65 @@
+name: "E2E: apply"
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_cost:
+        description: "I confirm this will provision real infrastructure (~$5/run)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: apply + smoke + destroy
+    runs-on: ubuntu-latest
+    if: inputs.confirm_cost == true && vars.HAS_CLOUD_CREDENTIALS == 'true'
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: examples/minimal
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1.0.8
+
+      - name: Init
+        run: tofu init
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+      - name: Apply
+        run: tofu apply -auto-approve -no-color -input=false
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_hcloud_api_token: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_admin_password: ${{ secrets.RANCHER_ADMIN_PASSWORD }}
+
+      - name: Smoke test — verify Rancher URL
+        run: |
+          URL=$(tofu output -raw rancher_url 2>/dev/null || echo "")
+          echo "Rancher URL: $URL"
+          [ -n "$URL" ] || { echo "FAIL: empty rancher_url"; exit 1; }
+          # Wait for Rancher UI (up to 10 min — Rancher takes time to boot)
+          for i in $(seq 1 120); do
+            HTTP_CODE=$(curl -sk -o /dev/null -w '%{http_code}' --connect-timeout 5 "$URL" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 500 ]; then
+              echo "PASS: Rancher accessible (HTTP $HTTP_CODE)"
+              exit 0
+            fi
+            echo "Waiting for Rancher... ($i/120, HTTP $HTTP_CODE)"
+            sleep 5
+          done
+          echo "WARN: Rancher not fully ready within 10 min"
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+      - name: Destroy
+        if: always()
+        run: tofu destroy -auto-approve -no-color -input=false
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_hcloud_api_token: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_admin_password: ${{ secrets.RANCHER_ADMIN_PASSWORD }}
