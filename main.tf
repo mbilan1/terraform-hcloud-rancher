@@ -121,7 +121,7 @@ locals {
     #      with "privileged" enforcement allows Rancher pods to start.
     #      The manifest is applied BEFORE the Rancher HelmChart (alphabetical order).
     # See: https://docs.rke2.io/security/hardening_guide
-    var.enable_cis_profile ? {
+    var.enable_cis ? {
       "00-cattle-system-ns.yaml" = <<-YAML
         apiVersion: v1
         kind: Namespace
@@ -235,7 +235,7 @@ module "rke2_cluster" {
   # RKE2
   rke2_version = var.rke2_version
   rke2_config  = var.rke2_config
-  cis_profile  = var.enable_cis_profile
+  enable_cis   = var.enable_cis
 
   # SSH Key (BYO passthrough)
   ssh_key_ids = var.ssh_key_ids

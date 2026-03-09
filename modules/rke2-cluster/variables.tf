@@ -92,8 +92,8 @@ variable "rke2_config" {
   nullable    = false
 }
 
-variable "cis_profile" {
-  description = "Enable RKE2 CIS 1.23 profile with OS-level prerequisites."
+variable "enable_cis" {
+  description = "Enable RKE2 CIS hardening. Idempotent on Packer images."
   type        = bool
   default     = false
   nullable    = false

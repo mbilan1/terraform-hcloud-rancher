@@ -17,7 +17,7 @@
 
 module "cluster" {
   # WORKAROUND: Using local path during cis-hardening development.
-  # TODO: Revert to git tag after rke2-core publishes cis_profile support.
+  # TODO: Revert to git tag after rke2-core publishes enable_cis support.
   source = "../../../terraform-hcloud-rke2-core"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ module "cluster" {
   # ── RKE2 ─────────────────────────────────────────────────────────────────
   rke2_version = var.rke2_version
   rke2_config  = var.rke2_config
-  cis_profile  = var.cis_profile
+  enable_cis   = var.enable_cis
 
   # ── SSH Key (BYO passthrough) ───────────────────────────────────────────
   ssh_key_ids = var.ssh_key_ids

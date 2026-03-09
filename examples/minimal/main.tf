@@ -53,12 +53,12 @@ module "rancher_management" {
     etcd-snapshot-retention: 10
   EOT
 
-  # ── CIS hardening ──────────────────────────────────────────────────────────
-  # DECISION: CIS profile enabled as a first-class feature.
-  # Why: Automatically creates etcd user, sets kernel params, and adds
-  #      'profile: cis' to RKE2 config.yaml via cloud-init — no pre-baked
-  #      Packer image required.
-  enable_cis_profile = true
+  # ── CIS hardening (opt-in) ───────────────────────────────────────────────
+  # Set enable_cis = true for RKE2 CIS profile (etcd user, kernel params,
+  # PSA restricted). Works with both stock ubuntu-24.04 and Packer golden images.
+  # For full host-level CIS L1, additionally use a Packer image built with
+  # enable_cis_hardening=true (see packer-hcloud-rke2 repo).
+  # enable_cis = true
 
   # ── Firewall (BYO) ─────────────────────────────────────────────────────────
   firewall_ids = [hcloud_firewall.management.id]
