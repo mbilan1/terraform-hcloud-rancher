@@ -266,6 +266,40 @@ run "admin_password_accepts_12_chars" {
   }
 }
 
+run "admin_password_rejects_yaml_unsafe_percent" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "%1qHlVPmC+Iyi&r"
+  }
+
+  expect_failures = [var.admin_password]
+}
+
+run "admin_password_rejects_yaml_unsafe_braces" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "password{with}braces"
+  }
+
+  expect_failures = [var.admin_password]
+}
+
+run "admin_password_accepts_yaml_safe_special" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "Secure-Pass_12.AB"
+  }
+}
+
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  UT-V05: rancher_hostname — empty means auto-generate, whitespace rejected ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝

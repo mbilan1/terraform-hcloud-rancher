@@ -30,10 +30,16 @@
 # Why: var.admin_password is sensitive — OpenTofu forbids sensitive values in
 #      for_each keys because the key would be exposed in the resource address.
 #      count with a ternary on sensitive is allowed (the index is always [0]).
+# COMPROMISE: Restrict special characters to YAML-safe subset.
+# Why: The password is embedded in a HelmChart CRD valuesContent (YAML inside YAML).
+#      Characters like %, {, }, [, ], *, &, #, ?, |, >, <, !, @, ` break YAML parsing
+#      even inside double quotes. Limiting to !@#$%^&*()-_=+ is insufficient because
+#      YAML reserves many of those. The safe subset below avoids all YAML special chars.
 resource "random_password" "admin" {
-  count   = var.admin_password == "" ? 1 : 0
-  length  = 24
-  special = true
+  count            = var.admin_password == "" ? 1 : 0
+  length           = 24
+  special          = true
+  override_special = "-_."
 }
 
 locals {
@@ -159,8 +165,8 @@ locals {
           targetNamespace: cattle-system
           createNamespace: true
           valuesContent: |-
-            hostname: ${local.effective_hostname}
-            bootstrapPassword: ${local.effective_admin_password}
+            hostname: "${local.effective_hostname}"
+            bootstrapPassword: "${local.effective_admin_password}"
             replicas: 1
             ingress:
               tls:

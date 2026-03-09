@@ -63,6 +63,14 @@ variable "admin_password" {
     condition     = var.admin_password == "" || length(var.admin_password) >= 12
     error_message = "admin_password must be at least 12 characters (or empty for auto-generation)."
   }
+
+  # DECISION: Block YAML-breaking characters in user-provided passwords.
+  # Why: The password is embedded in a HelmChart CRD valuesContent (YAML inside YAML).
+  #      Characters like %, {, }, [, ], *, &, #, ?, |, >, <, !, `, " break YAML parsing.
+  validation {
+    condition     = var.admin_password == "" || can(regex("^[a-zA-Z0-9_.\\-!@^()+=/~]+$", var.admin_password))
+    error_message = "admin_password contains characters that break YAML parsing (%, {, }, [, ], *, &, #, ?, |, >, <, `, \"). Use alphanumeric plus: - _ . ! @ ^ ( ) + = / ~"
+  }
 }
 
 variable "tls_source" {
