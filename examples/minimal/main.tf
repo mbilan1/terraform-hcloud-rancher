@@ -60,6 +60,7 @@ module "rancher_management" {
   #      Packer image required.
   enable_cis_profile = true
 
+
   # ── Firewall (BYO) ─────────────────────────────────────────────────────────
   firewall_ids = [hcloud_firewall.management.id]
 }

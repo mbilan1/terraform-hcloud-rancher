@@ -108,6 +108,26 @@ locals {
   #      after Rancher starts — the deploy controller retries failed manifests
   #      until Rancher registers its CRDs (management.cattle.io, catalog.cattle.io).
   rancher_server_manifests = merge(
+    # DECISION: Pre-create cattle-system namespace with PSA exemption when CIS is enabled.
+    # Why: RKE2 CIS profile sets cluster-wide PodSecurity "restricted:latest".
+    #      Rancher pods don't comply with restricted (allowPrivilegeEscalation,
+    #      capabilities, runAsNonRoot, seccompProfile). Pre-creating the namespace
+    #      with "privileged" enforcement allows Rancher pods to start.
+    #      The manifest is applied BEFORE the Rancher HelmChart (alphabetical order).
+    # See: https://docs.rke2.io/security/hardening_guide
+    var.enable_cis_profile ? {
+      "00-cattle-system-ns.yaml" = <<-YAML
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: cattle-system
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: privileged
+            pod-security.kubernetes.io/warn: privileged
+      YAML
+    } : {},
+
     {
       "00-cert-manager.yaml" = <<-YAML
         apiVersion: helm.cattle.io/v1
@@ -210,6 +230,9 @@ module "rke2_cluster" {
   rke2_version = var.rke2_version
   rke2_config  = var.rke2_config
   cis_profile  = var.enable_cis_profile
+
+  # SSH Key (BYO passthrough)
+  ssh_key_ids = var.ssh_key_ids
 
   # Firewall (BYO passthrough)
   firewall_ids = var.firewall_ids

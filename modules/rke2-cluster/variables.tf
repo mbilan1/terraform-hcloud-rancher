@@ -99,6 +99,15 @@ variable "cis_profile" {
   nullable    = false
 }
 
+# ── SSH Key (BYO passthrough) ────────────────────────────────────────────────
+
+variable "ssh_key_ids" {
+  description = "List of Hetzner SSH key IDs to install on nodes. BYO: Zero-SSH by default."
+  type        = list(number)
+  default     = []
+  nullable    = false
+}
+
 # DECISION: extra_server_manifests passed through from root module.
 # Why: Allows root module to inject HelmChart CRDs (cert-manager, Rancher) into
 #      the cloud-init manifests directory. RKE2 HelmController installs them

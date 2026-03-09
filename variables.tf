@@ -255,6 +255,16 @@ variable "firewall_ids" {
   default     = []
 }
 
+# DECISION: BYO SSH Key — passthrough to rke2-core.
+# Why: True Zero-SSH by default (ADR-002). Users who need SSH access for
+#      debugging or compliance bring their own pre-existing Hetzner SSH key IDs.
+variable "ssh_key_ids" {
+  description = "List of Hetzner SSH key IDs to install on management cluster nodes. Empty by default (Zero-SSH)."
+  type        = list(number)
+  nullable    = false
+  default     = []
+}
+
 # DECISION: enable_secrets_encryption removed.
 # Why: rke2-core does not expose this variable. Secrets encryption is
 #      configurable via the rke2_config pass-through variable if needed.

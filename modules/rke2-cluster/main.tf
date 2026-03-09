@@ -49,6 +49,9 @@ module "cluster" {
   rke2_config  = var.rke2_config
   cis_profile  = var.cis_profile
 
+  # ── SSH Key (BYO passthrough) ───────────────────────────────────────────
+  ssh_key_ids = var.ssh_key_ids
+
   # ── Firewall (BYO passthrough) ──────────────────────────────────────────
   firewall_ids = var.firewall_ids
 
