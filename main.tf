@@ -30,10 +30,16 @@
 # Why: var.admin_password is sensitive — OpenTofu forbids sensitive values in
 #      for_each keys because the key would be exposed in the resource address.
 #      count with a ternary on sensitive is allowed (the index is always [0]).
+# COMPROMISE: Restrict special characters to YAML-safe subset.
+# Why: The password is embedded in a HelmChart CRD valuesContent (YAML inside YAML).
+#      Characters like %, {, }, [, ], *, &, #, ?, |, >, <, !, @, ` break YAML parsing
+#      even inside double quotes. Limiting to !@#$%^&*()-_=+ is insufficient because
+#      YAML reserves many of those. The safe subset below avoids all YAML special chars.
 resource "random_password" "admin" {
-  count   = var.admin_password == "" ? 1 : 0
-  length  = 24
-  special = true
+  count            = var.admin_password == "" ? 1 : 0
+  length           = 24
+  special          = true
+  override_special = "-_."
 }
 
 locals {
@@ -108,6 +114,26 @@ locals {
   #      after Rancher starts — the deploy controller retries failed manifests
   #      until Rancher registers its CRDs (management.cattle.io, catalog.cattle.io).
   rancher_server_manifests = merge(
+    # DECISION: Pre-create cattle-system namespace with PSA exemption when CIS is enabled.
+    # Why: RKE2 CIS profile sets cluster-wide PodSecurity "restricted:latest".
+    #      Rancher pods don't comply with restricted (allowPrivilegeEscalation,
+    #      capabilities, runAsNonRoot, seccompProfile). Pre-creating the namespace
+    #      with "privileged" enforcement allows Rancher pods to start.
+    #      The manifest is applied BEFORE the Rancher HelmChart (alphabetical order).
+    # See: https://docs.rke2.io/security/hardening_guide
+    var.enable_cis ? {
+      "00-cattle-system-ns.yaml" = <<-YAML
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: cattle-system
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: privileged
+            pod-security.kubernetes.io/warn: privileged
+      YAML
+    } : {},
+
     {
       "00-cert-manager.yaml" = <<-YAML
         apiVersion: helm.cattle.io/v1
@@ -139,8 +165,8 @@ locals {
           targetNamespace: cattle-system
           createNamespace: true
           valuesContent: |-
-            hostname: ${local.effective_hostname}
-            bootstrapPassword: ${local.effective_admin_password}
+            hostname: "${local.effective_hostname}"
+            bootstrapPassword: "${local.effective_admin_password}"
             replicas: 1
             ingress:
               tls:
@@ -209,6 +235,10 @@ module "rke2_cluster" {
   # RKE2
   rke2_version = var.rke2_version
   rke2_config  = var.rke2_config
+  enable_cis   = var.enable_cis
+
+  # SSH Key (BYO passthrough)
+  ssh_key_ids = var.ssh_key_ids
 
   # Firewall (BYO passthrough)
   firewall_ids = var.firewall_ids

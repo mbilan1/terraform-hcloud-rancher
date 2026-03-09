@@ -266,6 +266,40 @@ run "admin_password_accepts_12_chars" {
   }
 }
 
+run "admin_password_rejects_yaml_unsafe_percent" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "%1qHlVPmC+Iyi&r"
+  }
+
+  expect_failures = [var.admin_password]
+}
+
+run "admin_password_rejects_yaml_unsafe_braces" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "password{with}braces"
+  }
+
+  expect_failures = [var.admin_password]
+}
+
+run "admin_password_accepts_yaml_safe_special" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "Secure-Pass_12.AB"
+  }
+}
+
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  UT-V05: rancher_hostname — empty means auto-generate, whitespace rejected ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
@@ -570,4 +604,44 @@ run "letsencrypt_email_rejects_invalid" {
   }
 
   expect_failures = [var.letsencrypt_email]
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V17: enable_cis — accepts true/false                                  ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "enable_cis_default_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+  }
+
+  assert {
+    condition     = var.enable_cis == false
+    error_message = "enable_cis should default to false."
+  }
+}
+
+run "enable_cis_accepts_true" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    enable_cis       = true
+  }
+}
+
+run "enable_cis_accepts_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    enable_cis       = false
+  }
 }

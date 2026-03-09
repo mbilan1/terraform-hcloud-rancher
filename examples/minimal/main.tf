@@ -48,13 +48,17 @@ module "rancher_management" {
   node_location             = "hel1"
 
   # ── RKE2 config ──────────────────────────────────────────────────────────────
-  # NOTE: CIS profile (profile: cis) requires cloud-init pre-setup (etcd user,
-  #       kernel params) or a pre-baked Packer image. Use enable_cis_profile
-  #       variable when available. See: cis-hardening branch.
   rke2_config = <<-EOT
     etcd-snapshot-schedule-cron: "0 */6 * * *"
     etcd-snapshot-retention: 10
   EOT
+
+  # ── CIS hardening (opt-in) ───────────────────────────────────────────────
+  # Set enable_cis = true for RKE2 CIS profile (etcd user, kernel params,
+  # PSA restricted). Works with both stock ubuntu-24.04 and Packer golden images.
+  # For full host-level CIS L1, additionally use a Packer image built with
+  # enable_cis_hardening=true (see packer-hcloud-rke2 repo).
+  # enable_cis = true
 
   # ── Firewall (BYO) ─────────────────────────────────────────────────────────
   firewall_ids = [hcloud_firewall.management.id]

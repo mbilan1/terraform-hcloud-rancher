@@ -63,6 +63,14 @@ variable "admin_password" {
     condition     = var.admin_password == "" || length(var.admin_password) >= 12
     error_message = "admin_password must be at least 12 characters (or empty for auto-generation)."
   }
+
+  # DECISION: Block YAML-breaking characters in user-provided passwords.
+  # Why: The password is embedded in a HelmChart CRD valuesContent (YAML inside YAML).
+  #      Characters like %, {, }, [, ], *, &, #, ?, |, >, <, !, `, " break YAML parsing.
+  validation {
+    condition     = var.admin_password == "" || can(regex("^[a-zA-Z0-9_.\\-!@^()+=/~]+$", var.admin_password))
+    error_message = "admin_password contains characters that break YAML parsing (%, {, }, [, ], *, &, #, ?, |, >, <, `, \"). Use alphanumeric plus: - _ . ! @ ^ ( ) + = / ~"
+  }
 }
 
 variable "tls_source" {
@@ -255,6 +263,16 @@ variable "firewall_ids" {
   default     = []
 }
 
+# DECISION: BYO SSH Key — passthrough to rke2-core.
+# Why: True Zero-SSH by default (ADR-002). Users who need SSH access for
+#      debugging or compliance bring their own pre-existing Hetzner SSH key IDs.
+variable "ssh_key_ids" {
+  description = "List of Hetzner SSH key IDs to install on management cluster nodes. Empty by default (Zero-SSH)."
+  type        = list(number)
+  nullable    = false
+  default     = []
+}
+
 # DECISION: enable_secrets_encryption removed.
 # Why: rke2-core does not expose this variable. Secrets encryption is
 #      configurable via the rke2_config pass-through variable if needed.
@@ -282,8 +300,10 @@ variable "hcloud_image" {
 variable "rke2_config" {
   # DECISION: Passthrough for additional RKE2 server config.
   # Why: Enables operators to configure etcd S3 backup, audit logging,
-  #      CIS profile, and other RKE2 server settings without modifying
-  #      the module. Content is appended to every node's config.yaml.
+  #      and other RKE2 server settings without modifying the module.
+  #      Content is appended to every node's config.yaml.
+  # NOTE: CIS profile is handled separately via enable_cis.
+  #       Do NOT add 'profile: cis' here — use enable_cis instead.
   # NOTE: Default enables aggressive local etcd snapshots for management clusters.
   description = "Additional RKE2 config.yaml content appended to every management cluster node."
   type        = string
@@ -292,6 +312,22 @@ variable "rke2_config" {
     etcd-snapshot-schedule-cron: "0 */6 * * *"
     etcd-snapshot-retention: 10
   EOT
+}
+
+variable "enable_cis" {
+  # DECISION: Single CIS feature flag for both Packer and Profile flows.
+  # Why: RKE2 CIS profile requires OS-level prerequisites (etcd user, kernel
+  #      params) that must be applied BEFORE rke2-server starts. This flag
+  #      handles prereqs + profile atomically. Prerequisites are idempotent —
+  #      safe on both stock images (cloud-init creates them) and Packer golden
+  #      images (already baked in by rke2-base Ansible role).
+  #      Additionally creates cattle-system namespace with PSA 'privileged'
+  #      exemption so Rancher pods pass PodSecurity admission.
+  # See: https://docs.rke2.io/security/hardening_guide
+  description = "Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and exempts cattle-system from PodSecurity restricted policy. Works with both stock ubuntu-24.04 and Packer golden images."
+  type        = bool
+  nullable    = false
+  default     = false
 }
 
 variable "rke2_version" {
