@@ -245,6 +245,7 @@ README.md contains version badges (shields.io) that must stay in sync with `vers
 | hcloud | `versions.tf` → `required_providers.hcloud.version` | `hcloud-<version>` |
 | rancher2 | `versions.tf` → `required_providers.rancher2.version` | `rancher2-<version>` |
 | random | `versions.tf` → `required_providers.random.version` | `random-<version>` |
+| RKE2 | `variables.tf` → `rke2_version` default | `RKE2-<version>` |
 
 When bumping a provider version:
 1. Update `versions.tf`
