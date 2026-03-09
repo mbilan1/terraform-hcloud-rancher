@@ -1,5 +1,5 @@
 # terraform-hcloud-rancher
-
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mbilan1/terraform-hcloud-rancher?utm_source=oss&utm_medium=github&utm_campaign=mbilan1%2Fterraform-hcloud-rancher&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 [![Lint: fmt](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-fmt.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-fmt.yml)
 [![Lint: validate](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-validate.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-validate.yml)
 [![Lint: tflint](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-tflint.yml/badge.svg)](https://github.com/mbilan1/terraform-hcloud-rancher/actions/workflows/lint-tflint.yml)
