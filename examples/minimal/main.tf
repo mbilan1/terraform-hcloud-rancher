@@ -47,6 +47,13 @@ module "rancher_management" {
   control_plane_server_type = "cpx42"
   node_location             = "hel1"
 
+  # ── CIS hardening (RKE2 profile) ───────────────────────────────────────────
+  rke2_config = <<-EOT
+    etcd-snapshot-schedule-cron: "0 */6 * * *"
+    etcd-snapshot-retention: 10
+    profile: cis
+  EOT
+
   # ── Firewall (BYO) ─────────────────────────────────────────────────────────
   firewall_ids = [hcloud_firewall.management.id]
 }
