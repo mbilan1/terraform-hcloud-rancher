@@ -66,7 +66,7 @@ variable "admin_password" {
 
   # DECISION: Block YAML-breaking characters in user-provided passwords.
   # Why: The password is embedded in a HelmChart CRD valuesContent (YAML inside YAML).
-  #      Characters like %, {, }, [, ], *, &, #, ?, |, >, <, !, `, " break YAML parsing.
+  #      Characters like %, {, }, [, ], *, &, #, ?, |, >, <, `, " break YAML parsing.
   validation {
     condition     = var.admin_password == "" || can(regex("^[a-zA-Z0-9_.\\-!@^()+=/~]+$", var.admin_password))
     error_message = "admin_password contains characters that break YAML parsing (%, {, }, [, ], *, &, #, ?, |, >, <, `, \"). Use alphanumeric plus: - _ . ! @ ^ ( ) + = / ~"
@@ -165,14 +165,14 @@ variable "existing_ingress_lb_ipv4" {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 variable "cluster_name" {
-  description = "Identifier prefix for all provisioned resources (servers, LBs, network). Must be lowercase alphanumeric, max 20 characters."
+  description = "Identifier prefix for all provisioned resources (servers, LBs, network). Must be lowercase alphanumeric with optional hyphens, max 20 characters."
   type        = string
   nullable    = false
   default     = "rancher"
 
   validation {
-    condition     = can(regex("^[a-z0-9]{1,20}$", var.cluster_name))
-    error_message = "cluster_name must be lowercase alphanumeric and at most 20 characters."
+    condition     = can(regex("^[a-z][a-z0-9-]{0,18}[a-z0-9]$", var.cluster_name))
+    error_message = "cluster_name must start with a letter, contain only lowercase alphanumeric and hyphens, not end with a hyphen, and be at most 20 characters."
   }
 }
 
