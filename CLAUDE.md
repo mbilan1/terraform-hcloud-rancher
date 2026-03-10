@@ -48,7 +48,7 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that deploys a **Ranche
 
 ## Quick Reference
 
-- **45 tests**, mock_provider, ~3s, $0: `tofu test`
+- **51 tests**, mock_provider, ~3s, $0: `tofu test`
 - **Validate**: `tofu validate` (safe, always run after edits)
 - **Format**: `tofu fmt` (safe, auto-fix)
 - **NEVER**: `tofu plan` in root, `tofu apply`, `tofu destroy`, `tofu init -upgrade`

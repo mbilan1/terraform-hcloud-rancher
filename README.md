@@ -54,7 +54,7 @@ rke2-core (L3 infra) → rancher (L3+L4 management) → cluster-templates (downs
 - **Hetzner Node Driver** — [zsys-studio/rancher-hetzner-cluster-provider](https://github.com/zsys-studio/rancher-hetzner-cluster-provider) installed via cloud-init
 - **TLS flexibility** — self-signed (Rancher CA), Let's Encrypt, or user-provided certificate
 - **Dual Load Balancer** — control-plane LB (K8s API) + ingress LB (Rancher UI)
-- **CIS hardening** — optional RKE2 CIS 1.23 profile via `enable_cis` with automatic PSA exemptions for Rancher
+- **CIS hardening** — optional RKE2 CIS profile via `enable_cis` with automatic PSA exemptions for Rancher
 - **2 providers only** — `hcloud` + `rancher2` (all L4 via cloud-init manifests)
 
 ## Requirements
@@ -157,6 +157,7 @@ terraform-hcloud-rancher/
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.0 |
 | <a name="requirement_hcloud"></a> [hcloud](#requirement\_hcloud) | = 1.60.1 |
 | <a name="requirement_rancher2"></a> [rancher2](#requirement\_rancher2) | = 13.1.4 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | = 3.8.1 |
 ### Providers
 
 | Name | Version |
@@ -172,7 +173,7 @@ terraform-hcloud-rancher/
 | [hcloud_load_balancer_service.http](https://registry.terraform.io/providers/hetznercloud/hcloud/1.60.1/docs/resources/load_balancer_service) | resource |
 | [hcloud_load_balancer_service.https](https://registry.terraform.io/providers/hetznercloud/hcloud/1.60.1/docs/resources/load_balancer_service) | resource |
 | [hcloud_load_balancer_target.ingress](https://registry.terraform.io/providers/hetznercloud/hcloud/1.60.1/docs/resources/load_balancer_target) | resource |
-| [random_password.admin](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [random_password.admin](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/password) | resource |
 ### Inputs
 
 | Name | Description | Type | Default | Required |
@@ -183,17 +184,22 @@ terraform-hcloud-rancher/
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Identifier prefix for all provisioned resources (servers, LBs, network). Must be lowercase alphanumeric, max 20 characters. | `string` | `"rancher"` | no |
 | <a name="input_control_plane_server_type"></a> [control\_plane\_server\_type](#input\_control\_plane\_server\_type) | Hetzner Cloud server type for management cluster nodes. Minimum cx43 (8 vCPU, 16 GB) for Rancher. | `string` | `"cx43"` | no |
 | <a name="input_create_ingress_lb"></a> [create\_ingress\_lb](#input\_create\_ingress\_lb) | Create a Hetzner ingress load balancer for Rancher UI (ports 80/443). Set to false when using a pre-existing or external load balancer. | `bool` | `true` | no |
+| <a name="input_enable_cis"></a> [enable\_cis](#input\_enable\_cis) | Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and exempts cattle-system from PodSecurity restricted policy. Works with both stock ubuntu-24.04 and Packer golden images. | `bool` | `false` | no |
 | <a name="input_existing_ingress_lb_ipv4"></a> [existing\_ingress\_lb\_ipv4](#input\_existing\_ingress\_lb\_ipv4) | IPv4 address of an existing ingress load balancer. Only used when create\_ingress\_lb = false. If set, auto-generates hostname from this IP (unless rancher\_hostname is provided). | `string` | `""` | no |
+| <a name="input_firewall_ids"></a> [firewall\_ids](#input\_firewall\_ids) | List of Hetzner firewall IDs to attach to all management cluster nodes. BYO: create firewalls externally and pass their IDs. | `list(number)` | `[]` | no |
+| <a name="input_hcloud_image"></a> [hcloud\_image](#input\_hcloud\_image) | OS image for management cluster nodes. Use 'ubuntu-24.04' (default) or a Hetzner snapshot ID from a Packer baked image. | `string` | `"ubuntu-24.04"` | no |
 | <a name="input_hcloud_network_cidr"></a> [hcloud\_network\_cidr](#input\_hcloud\_network\_cidr) | IPv4 address range for the Hetzner private network in CIDR notation. | `string` | `"10.0.0.0/16"` | no |
 | <a name="input_hcloud_network_zone"></a> [hcloud\_network\_zone](#input\_hcloud\_network\_zone) | Hetzner network zone encompassing all node locations. | `string` | `"eu-central"` | no |
-| <a name=\"input_hetzner_driver_version\"></a> [hetzner\\_driver\\_version](#input\\_hetzner\\_driver\\_version) | Version of zsys-studio/rancher-hetzner-cluster-provider to install as Rancher Node Driver. | `string` | `\"0.9.0\"` | no |
-| <a name="input_install_hetzner_driver"></a> [install\_hetzner\_driver](#input\_install\_hetzner\_driver) | Install the zsys-studio Hetzner Node Driver and UI Extension. Set to false if managing the driver separately. | `bool` | `true` | no |
+| <a name="input_hetzner_driver_version"></a> [hetzner\_driver\_version](#input\_hetzner\_driver\_version) | Version of zsys-studio/rancher-hetzner-cluster-provider to install as Rancher Node Driver. | `string` | `"0.9.0"` | no |
+| <a name="input_install_hetzner_driver"></a> [install\_hetzner\_driver](#input\_install\_hetzner\_driver) | Install zsys-studio Hetzner Node Driver for downstream cluster provisioning via Rancher UI. Set to false if the driver is managed externally. | `bool` | `true` | no |
 | <a name="input_letsencrypt_email"></a> [letsencrypt\_email](#input\_letsencrypt\_email) | Email address for Let's Encrypt certificate registration. Required when tls\_source = 'letsEncrypt', ignored otherwise. | `string` | `""` | no |
 | <a name="input_management_node_count"></a> [management\_node\_count](#input\_management\_node\_count) | Number of control-plane nodes for the management cluster. Use 1 for dev/test, 3 for HA production. | `number` | `1` | no |
 | <a name="input_node_location"></a> [node\_location](#input\_node\_location) | Primary Hetzner datacenter location for management cluster nodes (e.g. 'hel1', 'nbg1', 'fsn1'). | `string` | `"hel1"` | no |
 | <a name="input_rancher_hostname"></a> [rancher\_hostname](#input\_rancher\_hostname) | FQDN for the Rancher UI (e.g. 'rancher.example.com'). Leave empty to auto-generate from ingress LB IP via sslip.io. | `string` | `""` | no |
 | <a name="input_rancher_version"></a> [rancher\_version](#input\_rancher\_version) | Rancher Helm chart version to install (e.g. '2.13.3'). Must be compatible with the Kubernetes version. | `string` | `"2.13.3"` | no |
-| <a name="input_rke2_version"></a> [rke2\_version](#input\_rke2\_version) | RKE2 release tag to deploy (e.g. 'v1.32.2+rke2r1'). Leave empty for stable channel. | `string` | `"v1.32.2+rke2r1"` | no |
+| <a name="input_rke2_config"></a> [rke2\_config](#input\_rke2\_config) | Additional RKE2 config.yaml content appended to every management cluster node. | `string` | `"etcd-snapshot-schedule-cron: \"0 */6 * * *\"\netcd-snapshot-retention: 10\n"` | no |
+| <a name="input_rke2_version"></a> [rke2\_version](#input\_rke2\_version) | RKE2 release tag to deploy (e.g. 'v1.34.4+rke2r1'). Leave empty for stable channel. | `string` | `"v1.34.4+rke2r1"` | no |
+| <a name="input_ssh_key_ids"></a> [ssh\_key\_ids](#input\_ssh\_key\_ids) | List of Hetzner SSH key IDs to install on management cluster nodes. Empty by default (Zero-SSH). | `list(number)` | `[]` | no |
 | <a name="input_subnet_address"></a> [subnet\_address](#input\_subnet\_address) | Subnet allocation for cluster nodes within the private network. | `string` | `"10.0.1.0/24"` | no |
 | <a name="input_tls_source"></a> [tls\_source](#input\_tls\_source) | TLS certificate source for Rancher. 'rancher' = self-signed CA generated by Rancher, 'letsEncrypt' = Let's Encrypt via cert-manager ACME, 'secret' = user-provided TLS secret. | `string` | `"rancher"` | no |
 ### Outputs

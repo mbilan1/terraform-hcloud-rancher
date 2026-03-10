@@ -15,29 +15,36 @@ Handles admin bootstrap after Rancher is installed by RKE2 HelmController via cl
 This module is called internally by the root module. Do not use it directly.
 
 <!-- BEGIN_TF_DOCS -->
-### Requirements
+## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.0 |
-| <a name="requirement_rancher2"></a> [rancher2](#requirement\_rancher2) | >= 13.0.0 |
-### Providers
+| <a name="requirement_rancher2"></a> [rancher2](#requirement\_rancher2) | = 13.1.4 |
+
+## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | >= 13.0.0 |
-### Resources
+| <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | = 13.1.4 |
+
+## Modules
+
+No modules.
+
+## Resources
 
 | Name | Type |
 |------|------|
-| [rancher2_bootstrap.admin](https://registry.terraform.io/providers/rancher/rancher2/latest/docs/resources/bootstrap) | resource |
-### Inputs
+| [rancher2_bootstrap.admin](https://registry.terraform.io/providers/rancher/rancher2/13.1.4/docs/resources/bootstrap) | resource |
+
+## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | Initial password for the Rancher 'admin' user. | `string` | n/a | yes |
-| <a name="input_rancher_hostname"></a> [rancher\_hostname](#input\_rancher\_hostname) | Fully qualified domain name for the Rancher UI (e.g. 'rancher.example.com'). | `string` | n/a | yes |
-### Outputs
+
+## Outputs
 
 | Name | Description |
 |------|-------------|

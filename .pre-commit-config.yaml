@@ -1,7 +1,13 @@
 repos:
-  - repo: https://github.com/antonbabenko/pre-commit-tf
-    rev: v1.96.4
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.3
     hooks:
+      - id: terraform_fmt
+        args:
+          - --args=-diff
+      - id: terraform_validate
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
       - id: terraform_docs
         args:
           - --hook-config=--path-to-file=README.md
@@ -15,3 +21,13 @@ repos:
       - id: end-of-file-fixer
       - id: check-merge-conflict
       - id: detect-private-key
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]

@@ -37,29 +37,45 @@ tofu apply
 4. Provision downstream RKE2 clusters via Rancher UI
 
 <!-- BEGIN_TF_DOCS -->
-### Requirements
+## Requirements
 
-No requirements.
-### Providers
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.0 |
+| <a name="requirement_hcloud"></a> [hcloud](#requirement\_hcloud) | ~> 1.49 |
 
-No providers.
-### Resources
+## Providers
 
-No resources.
-### Inputs
+| Name | Version |
+|------|---------|
+| <a name="provider_hcloud"></a> [hcloud](#provider\_hcloud) | 1.60.1 |
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_rancher_management"></a> [rancher\_management](#module\_rancher\_management) | ../.. | n/a |
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [hcloud_firewall.management](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/firewall) | resource |
+
+## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | Initial password for the Rancher 'admin' user. Minimum 12 characters. | `string` | n/a | yes |
 | <a name="input_hcloud_api_token"></a> [hcloud\_api\_token](#input\_hcloud\_api\_token) | Hetzner Cloud API token for the management project (read/write access required) | `string` | n/a | yes |
-| <a name="input_rancher_hostname"></a> [rancher\_hostname](#input\_rancher\_hostname) | Fully qualified domain name for the Rancher UI (e.g. 'rancher.example.com'). Must resolve to the ingress LB IPv4. | `string` | n/a | yes |
-| <a name="input_letsencrypt_email"></a> [letsencrypt\_email](#input\_letsencrypt\_email) | Email address for Let's Encrypt certificate registration. Only required when tls\_source = 'letsEncrypt'. | `string` | `""` | no |
-### Outputs
+
+## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_control_plane_lb_ipv4"></a> [control\_plane\_lb\_ipv4](#output\_control\_plane\_lb\_ipv4) | K8s API load balancer IP (for kubectl access) |
 | <a name="output_ingress_lb_ipv4"></a> [ingress\_lb\_ipv4](#output\_ingress\_lb\_ipv4) | Point your DNS A-record for rancher\_hostname to this IP |
+| <a name="output_initial_master_ipv4"></a> [initial\_master\_ipv4](#output\_initial\_master\_ipv4) | Public IP of the initial master node |
+| <a name="output_rancher_admin_password"></a> [rancher\_admin\_password](#output\_rancher\_admin\_password) | Rancher admin password (auto-generated) |
 | <a name="output_rancher_admin_token"></a> [rancher\_admin\_token](#output\_rancher\_admin\_token) | Rancher admin API token (sensitive) |
+| <a name="output_rancher_hostname"></a> [rancher\_hostname](#output\_rancher\_hostname) | Effective Rancher hostname (auto-generated from LB IP if not provided) |
 | <a name="output_rancher_url"></a> [rancher\_url](#output\_rancher\_url) | Rancher UI URL |
 <!-- END_TF_DOCS -->
