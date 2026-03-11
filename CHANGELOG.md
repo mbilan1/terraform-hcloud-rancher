@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **CIS hardening**: `enable_cis` variable — single feature flag for RKE2 CIS profile, passthrough to rke2-core (ADR-011)
+- **CIS hardening**: `enable_cis` variable — single feature flag for RKE2 CIS 1.23 profile, passthrough to rke2-core (ADR-011)
 - **PSA exemption**: Pre-creates `cattle-system` namespace with PodSecurity `privileged` labels when CIS enabled — prevents Rancher pod admission failures
 - **YAML-safe passwords**: `random_password` uses `override_special = "-_."` to avoid YAML parsing breakage in cloud-init HelmChart values
 - **CI/CD**: Gate 0 (lint + SAST) and Gate 1 (unit tests) GitHub Actions workflows (ADR-010)
@@ -58,3 +58,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Route53 DNS integration (BYO DNS pattern instead)
 - Firewall variables (BYO Firewall per ADR-006)
+- Dead `install_hetzner_driver` variable

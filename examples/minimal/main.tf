@@ -55,8 +55,8 @@ module "rancher_management" {
 
   # ── CIS hardening (opt-in) ───────────────────────────────────────────────
   # Set enable_cis = true for RKE2 CIS profile (etcd user, kernel params,
-  # PSA restricted). Works with both stock ubuntu-24.04 and Packer golden images.
-  # For full host-level CIS L1, additionally use a Packer image built with
+  # PSA restricted). Works with both stock ubuntu-24.04 and Packer-built snapshots.
+  # For full host-level CIS L1, additionally use a Packer snapshot built with
   # enable_cis_hardening=true (see packer-hcloud-rke2 repo).
   # enable_cis = true
 

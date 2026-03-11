@@ -156,7 +156,7 @@ variable "hcloud_image_controller_version" {
 }
 
 variable "hcloud_image_builder_version" {
-  description = "Golden Image Builder container image tag (Packer + Ansible image used by builder Jobs)."
+  description = "Hcloud Image Builder container image tag (Packer + Ansible image used by builder Jobs)."
   type        = string
   nullable    = false
   default     = "0.1.0"
@@ -168,7 +168,7 @@ variable "hcloud_image_builder_version" {
 }
 
 variable "hcloud_image_rke2_version" {
-  description = "Default RKE2 version baked into golden images by the builder. Used as DEFAULT_RKE2_VERSION env var in the controller."
+  description = "Default RKE2 version baked into controller-triggered Packer snapshots. Used as DEFAULT_RKE2_VERSION env var in the controller."
   type        = string
   nullable    = false
   default     = "v1.34.4+rke2r1"
@@ -366,12 +366,12 @@ variable "enable_cis" {
   # Why: RKE2 CIS profile requires OS-level prerequisites (etcd user, kernel
   #      params) that must be applied BEFORE rke2-server starts. This flag
   #      handles prereqs + profile atomically. Prerequisites are idempotent —
-  #      safe on both stock images (cloud-init creates them) and Packer golden
-  #      images (already baked in by rke2-base Ansible role).
+  #      safe on both stock images (cloud-init creates them) and Packer-built
+  #      snapshots (already baked in by rke2-base Ansible role).
   #      Additionally creates cattle-system namespace with PSA 'privileged'
   #      exemption so Rancher pods pass PodSecurity admission.
   # See: https://docs.rke2.io/security/hardening_guide
-  description = "Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and exempts cattle-system from PodSecurity restricted policy. Works with both stock ubuntu-24.04 and Packer golden images."
+  description = "Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and exempts cattle-system from PodSecurity restricted policy. Works with both stock ubuntu-24.04 and Packer-built snapshots."
   type        = bool
   nullable    = false
   default     = false
