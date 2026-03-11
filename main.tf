@@ -206,6 +206,52 @@ locals {
             - "api.hetzner.cloud"
       YAML
     } : {},
+
+    # DECISION: Hcloud Image Controller deployed via HelmChart CRD in cloud-init.
+    # Why: Same pattern as cert-manager and Rancher — RKE2 HelmController installs
+    #      the chart from the Helm repo URL. The controller watches HetznerConfig
+    #      CRDs for "golden:*" image prefix and triggers Packer builds automatically.
+    # NOTE: Requires a namespace with PSA exemption (builder Jobs run privileged Packer).
+    # See: ADR-012, DES-004 in rke2-hetzner-architecture
+    var.install_hcloud_image_controller ? {
+      "03-hcloud-image-ns.yaml" = <<-YAML
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: hcloud-image-system
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: privileged
+            pod-security.kubernetes.io/warn: privileged
+      YAML
+
+      "03-hcloud-image-controller.yaml" = <<-YAML
+        apiVersion: helm.cattle.io/v1
+        kind: HelmChart
+        metadata:
+          name: hcloud-image-controller
+          namespace: kube-system
+        spec:
+          repo: https://mbilan1.github.io/rancher-hcloud-image-controller
+          chart: hcloud-image-controller
+          version: "${var.hcloud_image_controller_version}"
+          targetNamespace: hcloud-image-system
+          createNamespace: false
+          valuesContent: |-
+            namespace: hcloud-image-system
+            createNamespace: false
+            controller:
+              image:
+                repository: ghcr.io/mbilan1/hcloud-image-controller
+                tag: "${var.hcloud_image_controller_version}"
+            builder:
+              image:
+                repository: ghcr.io/mbilan1/hcloud-image-builder
+                tag: "${var.hcloud_image_builder_version}"
+            defaults:
+              rke2Version: "${var.hcloud_image_rke2_version}"
+      YAML
+    } : {},
   )
 }
 

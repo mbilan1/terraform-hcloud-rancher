@@ -133,6 +133,53 @@ variable "hetzner_driver_version" {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Hcloud Image Controller (DES-004)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+variable "install_hcloud_image_controller" {
+  description = "Install the Hcloud Image Controller for automated Packer snapshot builds when HetznerConfig uses 'golden:*' image convention. Requires Hetzner Node Driver."
+  type        = bool
+  nullable    = false
+  default     = false
+}
+
+variable "hcloud_image_controller_version" {
+  description = "Hcloud Image Controller Helm chart appVersion / container image tag."
+  type        = string
+  nullable    = false
+  default     = "0.1.0"
+
+  validation {
+    condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.hcloud_image_controller_version))
+    error_message = "hcloud_image_controller_version must be a semantic version (e.g. '0.1.0')."
+  }
+}
+
+variable "hcloud_image_builder_version" {
+  description = "Golden Image Builder container image tag (Packer + Ansible image used by builder Jobs)."
+  type        = string
+  nullable    = false
+  default     = "0.1.0"
+
+  validation {
+    condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.hcloud_image_builder_version))
+    error_message = "hcloud_image_builder_version must be a semantic version (e.g. '0.1.0')."
+  }
+}
+
+variable "hcloud_image_rke2_version" {
+  description = "Default RKE2 version baked into golden images by the builder. Used as DEFAULT_RKE2_VERSION env var in the controller."
+  type        = string
+  nullable    = false
+  default     = "v1.34.4+rke2r1"
+
+  validation {
+    condition     = can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.hcloud_image_rke2_version))
+    error_message = "hcloud_image_rke2_version must look like 'vX.Y.Z+rke2rN'."
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  Ingress Load Balancer (BYO pattern)
 # ═══════════════════════════════════════════════════════════════════════════════
 
