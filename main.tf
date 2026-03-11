@@ -132,22 +132,6 @@ locals {
             pod-security.kubernetes.io/audit: privileged
             pod-security.kubernetes.io/warn: privileged
       YAML
-
-      # DECISION: Pre-create cert-manager namespace with PSA exemption when CIS is enabled.
-      # Why: cert-manager pods require capabilities and privilege escalation that
-      #      violate the "restricted" PSA profile enforced by RKE2 CIS mode.
-      #      Without this exemption, cert-manager pods are blocked by PSA and
-      #      Rancher cannot obtain TLS certificates → never starts.
-      "00-cert-manager-ns.yaml" = <<-YAML
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: cert-manager
-          labels:
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/warn: privileged
-      YAML
     } : {},
 
     {
