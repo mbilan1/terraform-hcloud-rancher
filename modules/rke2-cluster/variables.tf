@@ -128,3 +128,12 @@ variable "firewall_ids" {
   default     = []
   nullable    = false
 }
+
+# ── Protection ────────────────────────────────────────────────────────────────
+
+variable "delete_protection" {
+  description = "Enable Hetzner delete/rebuild protection on servers and network. Recommended true for production."
+  type        = bool
+  default     = true
+  nullable    = false
+}

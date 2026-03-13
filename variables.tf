@@ -320,6 +320,16 @@ variable "ssh_key_ids" {
   default     = []
 }
 
+# DECISION: delete_protection exposed as variable with safe default.
+# Why: Management clusters should be protected from accidental deletion in production.
+#      Override to false only for dev/test environments where fast teardown is needed.
+variable "delete_protection" {
+  description = "Enable Hetzner delete/rebuild protection on servers and network. Recommended true for production."
+  type        = bool
+  nullable    = false
+  default     = true
+}
+
 # DECISION: enable_secrets_encryption removed.
 # Why: rke2-core does not expose this variable. Secrets encryption is
 #      configurable via the rke2_config pass-through variable if needed.

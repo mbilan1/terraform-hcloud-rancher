@@ -292,6 +292,9 @@ module "rke2_cluster" {
   # Firewall (BYO passthrough)
   firewall_ids = var.firewall_ids
 
+  # Protection
+  delete_protection = var.delete_protection
+
   # DECISION: Pass ALL L4 manifests (HelmCharts + raw CRDs) via cloud-init.
   # Why: Eliminates the need for helm/kubernetes/kubectl Terraform providers.
   #      RKE2 HelmController installs cert-manager + Rancher from HelmChart CRDs.
