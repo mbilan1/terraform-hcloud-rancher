@@ -168,9 +168,6 @@ locals {
             hostname: "${local.effective_hostname}"
             bootstrapPassword: "${local.effective_admin_password}"
             replicas: 1
-%{if var.tls_source == "letsEncrypt"~}
-            agentTlsMode: system-store
-%{endif~}
             ingress:
               tls:
                 source: ${var.tls_source}
@@ -180,6 +177,34 @@ locals {
 %{endif~}
       YAML
     },
+
+    # DECISION: agent-tls-mode Setting deployed via raw manifest, not Helm value.
+    # Why: Rancher chart v2.13+ accepts agentTlsMode in Helm values but does NOT
+    #      create a management.cattle.io/v3 Setting CRD from it. Rancher creates
+    #      the agent-tls-mode Setting at startup with default=strict, value="".
+    #      When tls_source=letsEncrypt, the certificate is publicly signed (Let's
+    #      Encrypt CA). Downstream agents with strict mode require cacerts from
+    #      /v3/settings/cacerts — but that endpoint returns empty for public CAs.
+    #      Result: agents fail TLS verification and never check in.
+    #      Setting value=system-store tells agents to use the OS trust store,
+    #      which already contains the Let's Encrypt root CA.
+    # RACE CONDITION: This manifest will fail on first attempt because
+    #      management.cattle.io CRDs don't exist until Rancher starts (~2-3 min).
+    #      RKE2 deploy controller retries failed manifests with server-side apply.
+    #      When Rancher creates the Setting (default=strict), the retry overwrites
+    #      value to system-store. This is the exact same pattern as NodeDriver
+    #      (02-hetzner-node-driver.yaml) which is proven to work.
+    # See: https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/resources/update-rancher-certificate#4-reconfigure-rancher-agents-to-trust-the-private-ca
+    var.tls_source == "letsEncrypt" ? {
+      "01-agent-tls-mode.yaml" = <<-YAML
+        apiVersion: management.cattle.io/v3
+        kind: Setting
+        metadata:
+          name: agent-tls-mode
+        customized: true
+        value: "system-store"
+      YAML
+    } : {},
 
     # DECISION: NodeDriver deployed via raw K8s manifest in cloud-init.
     # Why: The rancher2_node_driver Terraform resource auto-generates metadata.name
