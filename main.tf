@@ -168,6 +168,9 @@ locals {
             hostname: "${local.effective_hostname}"
             bootstrapPassword: "${local.effective_admin_password}"
             replicas: 1
+%{if var.tls_source == "letsEncrypt"~}
+            agentTlsMode: system-store
+%{endif~}
             ingress:
               tls:
                 source: ${var.tls_source}
