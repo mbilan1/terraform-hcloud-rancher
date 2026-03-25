@@ -645,3 +645,70 @@ run "enable_cis_accepts_false" {
     enable_cis       = false
   }
 }
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V18: install_cluster_autoscaler — accepts true/false                   ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "install_cluster_autoscaler_default_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+  }
+
+  assert {
+    condition     = var.install_cluster_autoscaler == false
+    error_message = "install_cluster_autoscaler should default to false."
+  }
+}
+
+run "install_cluster_autoscaler_accepts_true" {
+  command = plan
+
+  variables {
+    hcloud_api_token           = "mock-token"
+    rancher_hostname           = "rancher.example.com"
+    admin_password             = "SecurePassword123"
+    install_cluster_autoscaler = true
+  }
+}
+
+run "install_cluster_autoscaler_accepts_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token           = "mock-token"
+    rancher_hostname           = "rancher.example.com"
+    admin_password             = "SecurePassword123"
+    install_cluster_autoscaler = false
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V19: cluster_autoscaler_version — must be semver                       ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "cluster_autoscaler_version_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token           = "mock-token"
+    rancher_hostname           = "rancher.example.com"
+    admin_password             = "SecurePassword123"
+    cluster_autoscaler_version = "latest"
+  }
+
+  expect_failures = [var.cluster_autoscaler_version]
+}
+
+run "cluster_autoscaler_version_accepts_semver" {
+  command = plan
+
+  variables {
+    hcloud_api_token           = "mock-token"
+    rancher_hostname           = "rancher.example.com"
+    admin_password             = "SecurePassword123"
+    cluster_autoscaler_version = "9.46.6"
+  }
+}
