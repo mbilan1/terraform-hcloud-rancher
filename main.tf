@@ -280,6 +280,48 @@ locals {
               rke2Version: "${var.hcloud_image_rke2_version}"
       YAML
     } : {},
+
+    # DECISION: Cluster Autoscaler deployed via HelmChart CRD in cloud-init.
+    # Why: Same pattern as cert-manager, Rancher, and Hcloud Image Controller.
+    #      The autoscaler runs on the management cluster with --cloud-provider=clusterapi,
+    #      discovering ALL annotated MachineDeployments in fleet-default namespace.
+    #      It scales downstream cluster worker pools by patching MachineDeployment replicas.
+    # COMPROMISE: autoDiscovery.clusterName set to "unused" (dummy value).
+    # Why: The Helm chart conditionally generates the Deployment resource only when
+    #      autoDiscovery.clusterName is non-empty. We want namespace-wide discovery
+    #      (all clusters, not just one), so the real discovery is via extraArgs.
+    #      The "unused" clusterName matches nothing; the extraArgs discovery covers
+    #      all annotated MachineDeployments in fleet-default.
+    # See: ADR-008 in rke2-hetzner-architecture — CAPI Autoscaler Annotations
+    var.install_cluster_autoscaler ? {
+      "04-cluster-autoscaler.yaml" = <<-YAML
+        apiVersion: helm.cattle.io/v1
+        kind: HelmChart
+        metadata:
+          name: cluster-autoscaler
+          namespace: kube-system
+        spec:
+          repo: https://kubernetes.github.io/autoscaler
+          chart: cluster-autoscaler
+          version: "${var.cluster_autoscaler_version}"
+          targetNamespace: cattle-system
+          failurePolicy: reinstall
+          valuesContent: |-
+            cloudProvider: clusterapi
+            autoDiscovery:
+              clusterName: "unused"
+            clusterAPIMode: incluster-incluster
+            extraArgs:
+              logtostderr: true
+              v: "4"
+              scale-down-delay-after-add: "5m"
+              scale-down-unneeded-time: "5m"
+              skip-nodes-with-local-storage: "false"
+              balance-similar-node-groups: "true"
+              namespace: fleet-default
+              node-group-auto-discovery: "clusterapi:namespace=fleet-default"
+      YAML
+    } : {},
   )
 }
 

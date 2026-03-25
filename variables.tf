@@ -180,6 +180,35 @@ variable "hcloud_image_rke2_version" {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Cluster Autoscaler (ADR-008)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+variable "install_cluster_autoscaler" {
+  # DECISION: Optional CAPI Cluster Autoscaler on the management cluster.
+  # Why: Downstream cluster templates annotate MachineDeployments with
+  #      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size/max-size.
+  #      The autoscaler discovers ALL annotated MachineDeployments in fleet-default
+  #      and scales replicas accordingly. Runs on management cluster, not downstream.
+  # See: ADR-008 in rke2-hetzner-architecture — CAPI Autoscaler Annotations
+  description = "Install the Kubernetes Cluster Autoscaler with CAPI provider on the management cluster. Discovers all annotated MachineDeployments in fleet-default namespace for downstream cluster scaling."
+  type        = bool
+  nullable    = false
+  default     = false
+}
+
+variable "cluster_autoscaler_version" {
+  description = "Cluster Autoscaler Helm chart version (kubernetes/autoscaler)."
+  type        = string
+  nullable    = false
+  default     = "9.46.6"
+
+  validation {
+    condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.cluster_autoscaler_version))
+    error_message = "cluster_autoscaler_version must be a semantic version (e.g. '9.46.6')."
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  Ingress Load Balancer (BYO pattern)
 # ═══════════════════════════════════════════════════════════════════════════════
 
