@@ -221,7 +221,7 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `style`, `test`, `ci`
 3. **`initial_password` must match Helm `bootstrapPassword`** — the rancher2_bootstrap resource defaults `initial_password` to "admin", but the Helm chart sets a custom bootstrap password
 4. **README.md has auto-generated sections** — do NOT edit between `<!-- BEGIN_TF_DOCS -->` / `<!-- END_TF_DOCS -->`
 5. **terraform.tfstate should NEVER be committed** — it is in `.gitignore`
-6. **Local source path for rke2 module** — must be replaced with git URL before publishing
+6. **rke2-core module pinned by commit hash** — update hash in `modules/rke2-cluster/main.tf` + run `tofu init` when upgrading
 7. **Training data is stale** — always verify provider versions, chart versions, and server types via network
 
 ---

@@ -1,38 +1,39 @@
 # Minimal Example
 
-Single-node Rancher management cluster on Hetzner Cloud with self-signed TLS.
+Single-node Rancher management cluster on Hetzner Cloud with self-signed TLS and sslip.io auto-hostname.
 
 ## Usage
 
 ```bash
 export TF_VAR_hcloud_api_token="your-hetzner-api-token"
-export TF_VAR_admin_password="your-rancher-admin-password"  # min 12 chars
-export TF_VAR_rancher_hostname="rancher.example.com"
 
 tofu init
+tofu plan
 tofu apply
 ```
 
-### Testing with sslip.io (no DNS required)
+Admin password is auto-generated. Retrieve it after apply:
 
 ```bash
-# Phase 1: Deploy infrastructure to get LB IP
-tofu apply -target=module.rancher_management.module.rke2_cluster \
-           -target='module.rancher_management.hcloud_load_balancer.ingress["main"]' \
-           -target='module.rancher_management.hcloud_load_balancer_network.ingress["main"]' \
-           -target='module.rancher_management.hcloud_load_balancer_target.ingress["main"]' \
-           -target='module.rancher_management.hcloud_load_balancer_service.http["main"]' \
-           -target='module.rancher_management.hcloud_load_balancer_service.https["main"]'
+tofu output -raw rancher_admin_password
+```
 
-# Phase 2: Full apply with sslip.io hostname
-export TF_VAR_rancher_hostname="rancher.$(tofu output -raw ingress_lb_ipv4).sslip.io"
-tofu apply
+### With custom hostname and Let's Encrypt
+
+```bash
+export TF_VAR_hcloud_api_token="your-hetzner-api-token"
+
+tofu init
+tofu apply -var='rancher_hostname=rancher.example.com' \
+           -var='tls_source=letsEncrypt' \
+           -var='letsencrypt_email=ops@example.com' \
+           -var='admin_password=YourSecurePassword123'
 ```
 
 ## After Deploy
 
-1. Open the `rancher_url` output in a browser (accept self-signed cert warning)
-2. Log in with `admin` / `$TF_VAR_admin_password`
+1. Open the `rancher_url` output in a browser (accept self-signed cert warning for sslip.io)
+2. Log in with `admin` / the auto-generated password (`tofu output -raw rancher_admin_password`)
 3. Create Cloud Credentials for downstream Hetzner projects
 4. Provision downstream RKE2 clusters via Rancher UI
 
