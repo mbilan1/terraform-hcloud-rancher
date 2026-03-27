@@ -111,7 +111,7 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that deploys a **Ranche
 
 Thin wrapper around `terraform-hcloud-rke2-core` that:
 - Sources rke2-core with management-cluster-specific defaults
-- Passes `extra_server_manifests` for L4 software (cert-manager, Rancher, NodeDriver, UIPlugin)
+- Passes `extra_server_manifests` for L4 software (cert-manager, Rancher, NodeDriver, UIPlugin, Cluster Autoscaler, Image Controller)
 - Sets `delete_protection = true` for production safety
 - Outputs: `network_id`, `initial_master_ipv4`, `cluster_ready`
 
@@ -138,7 +138,7 @@ Thin wrapper around `terraform-hcloud-rke2-core` that:
 
 ### Deployment Flow
 ```
-L3: module.rke2_cluster → Hetzner infra + RKE2 + cloud-init manifests (cert-manager, Rancher, NodeDriver, UIPlugin)
+L3: module.rke2_cluster → Hetzner infra + RKE2 + cloud-init manifests (cert-manager, Rancher, NodeDriver, UIPlugin, Cluster Autoscaler, Image Controller)
 L4: module.rancher → rancher2_bootstrap (admin password + server URL)
 ```
 All L4 software is deployed via cloud-init HelmChart CRDs and raw manifests — no helm/kubernetes/kubectl providers.
@@ -160,7 +160,7 @@ All L4 software is deployed via cloud-init HelmChart CRDs and raw manifests — 
 - Do NOT merge them (ADR-003).
 
 ### RKE2 Module Dependency
-- `modules/rke2-cluster/main.tf` sources `terraform-hcloud-rke2-core` (local path during dev)
+- `modules/rke2-cluster/main.tf` sources `terraform-hcloud-rke2-core` via git commit hash pin
 - rke2-core is a proper module — no internal provider blocks, pure L3
 - True Zero-SSH: no SSH keys, no port 22, no kubeconfig output (ADR-002)
 

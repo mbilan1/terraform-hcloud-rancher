@@ -68,8 +68,7 @@ rke2-core (L3 infra) → rancher (L3+L4 management) → cluster-templates (downs
 
 ```hcl
 module "rancher" {
-  source  = "mbilan1/rancher/hcloud"
-  version = "~> 0.1"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rancher.git?ref=v0.1.0"
 
   hcloud_api_token = var.hcloud_api_token
   admin_password   = var.admin_password
@@ -94,13 +93,12 @@ For production, bring your own DNS (Route53, Cloudflare, or any provider):
 
 ```hcl
 module "rancher" {
-  source  = "mbilan1/rancher/hcloud"
-  version = "~> 0.1"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rancher.git?ref=v0.1.0"
 
-  hcloud_api_token = var.hcloud_api_token
-  rancher_hostname = "rancher.example.com"  # Your R53/Cloudflare managed FQDN
-  admin_password   = var.admin_password
-  tls_source       = "letsEncrypt"
+  hcloud_api_token  = var.hcloud_api_token
+  rancher_hostname  = "rancher.example.com"  # Your R53/Cloudflare managed FQDN
+  admin_password    = var.admin_password
+  tls_source        = "letsEncrypt"
   letsencrypt_email = "ops@example.com"
 }
 ```
@@ -134,7 +132,8 @@ terraform-hcloud-rancher/
 │   ├── rke2-cluster/    # L3: Hetzner infrastructure via terraform-hcloud-rke2-core
 │   └── rancher/         # L4: Rancher admin bootstrap only (rancher2_bootstrap)
 ├── examples/
-│   └── minimal/         # Minimal working deployment (sslip.io, self-signed TLS)
+│   ├── minimal/         # Minimal working deployment (sslip.io, self-signed TLS)
+│   └── complete/        # HA 3-node with BYO firewall, Let's Encrypt, Packer image
 ├── tests/               # OpenTofu unit tests (tofu test)
 └── docs/
     └── ARCHITECTURE.md  # Full design documentation
