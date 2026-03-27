@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Cluster Autoscaler**: `install_cluster_autoscaler` feature flag + HelmChart CRD manifest for CAPI-based autoscaling (ADR-008)
 - **CIS hardening**: `enable_cis` variable — single feature flag for RKE2 CIS 1.23 profile, passthrough to rke2-core (ADR-011)
 - **PSA exemption**: Pre-creates `cattle-system` namespace with PodSecurity `privileged` labels when CIS enabled — prevents Rancher pod admission failures
 - **YAML-safe passwords**: `random_password` uses `override_special = "-_."` to avoid YAML parsing breakage in cloud-init HelmChart values
@@ -21,7 +22,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - **Module source**: `terraform-hcloud-rke2-core` switched from local path to git reference `v0.1.0`
+- **rke2-core pin**: Bumped from `995cb16` (v0.2.0) to `ec11660` — includes CIS docs fixes, CI fixes, ip_forward fix+revert, Dependabot CI bumps
 - **Roadmap**: Marked mid-term items as complete (HA example, BYO firewall, backup/restore, monitoring)
+
+### Fixed
+
+- **Test suite**: `cluster_name_rejects_hyphens` test was failing (regex updated to allow hyphens in `ce193aa` but test not updated), causing 40 tests to be skipped via fail-fast. Renamed to `cluster_name_accepts_hyphens`, added `cluster_name_rejects_trailing_hyphen`. Result: 57/57 pass
 
 ## [0.1.0] - 2026-03-06
 

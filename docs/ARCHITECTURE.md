@@ -3,7 +3,7 @@
 > **Module**: `terraform-hcloud-rancher`
 > **Status**: **Tested** — first successful deployment completed 2026-02-27
 > **Target**: Rancher management cluster on Hetzner Cloud
-> **Last updated**: 2026-03-05
+> **Last updated**: 2026-03-27
 
 ---
 
@@ -138,7 +138,7 @@ terraform-hcloud-rancher/                # Root module (facade)
 |:-----:|-----------|----------------|-------|
 | L3 | `modules/rke2-cluster/` | Hetzner Cloud infrastructure (servers, network) | OpenTofu via `terraform-hcloud-rke2-core` |
 | L3 | Root (`/`) ingress LB | BYO ingress load balancer (ADR-003) | OpenTofu (`hcloud` provider) |
-| L4 | Root (`/`) cloud-init manifests | cert-manager + Rancher HelmChart CRDs + Hetzner Node Driver | RKE2 HelmController + deploy controller (via `extra_server_manifests`) |
+| L4 | Root (`/`) cloud-init manifests | cert-manager + Rancher HelmChart CRDs + Hetzner Node Driver + Cluster Autoscaler | RKE2 HelmController + deploy controller (via `extra_server_manifests`) |
 | L4 | `modules/rancher/` | Rancher admin bootstrap | OpenTofu (`rancher2` provider, bootstrap mode) |
 
 ### Design Decisions
@@ -686,6 +686,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 | 5 | UI Extension via `spec.uiUrl` on NodeDriver manifest | Automation vs manual | NodeDriver CRD supports `spec.uiUrl` natively — Rancher installs the UI extension alongside the driver binary. |
 | 6 | No automated CSI on downstream | Automation vs scope | CCM is now automated via cluster template `additionalManifest`. CSI install remains manual per downstream cluster. Automating CSI via Fleet/cluster-template is a roadmap item. |
 | 7 | Packer baked image for CIS | Build complexity vs runtime flexibility | CIS host prerequisites (etcd user, sysctl, kernel modules) must exist before RKE2 starts. Rancher-machine intercepts userData (treats value as file path). Packer snapshot with prerequisites baked in is the cleanest solution. Snapshots auto-named: `ubuntu-2404-rke2-{version}[-cis-l1]-{timestamp}`. |
+| 8 | Cluster Autoscaler `clusterName: "unused"` | Unused field shipped in chart values | The Cluster Autoscaler HelmChart manifest includes `clusterName: "unused"` because the chart schema requires it, but the actual cluster name comes from CAPI annotations per ADR-008. If upstream changes `unused` handling, this may break. |
 
 ---
 
@@ -716,7 +717,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [x] examples/minimal/ — single-node management cluster
 - [x] ARCHITECTURE.md (this document)
 - [x] AGENTS.md
-- [x] tests/ — variable validation + guardrails (tofu test)
+- [x] tests/ — variable validation + guardrails (57 tests via `tofu test`)
 
 ### Mid-term (hardening)
 
@@ -737,6 +738,7 @@ The module contains deliberate compromises. Each is documented in code comments 
 - [ ] Fleet/cluster-template for automated HCCM/CSI on downstream clusters
 - [ ] Rancher Cloud Credential management via Terraform (rancher2_cloud_credential)
 - [ ] Rancher SAML/OIDC integration template
+- [x] Cluster Autoscaler HelmChart CRD manifest — optional via `install_cluster_autoscaler` feature flag (ADR-008)
 - [x] Network policies on management cluster — Operations Guide section
 - [x] Audit logging configuration — Operations Guide section
 
