@@ -95,7 +95,7 @@ This module builds on `terraform-hcloud-rke2-core` (composable primitive, True Z
 
 ## Module Architecture
 
-The module uses a **two-layer architecture**: L3 infrastructure (delegated to `terraform-hcloud-rke2-core`) and L4 bootstrap (Rancher admin setup). All L4 **software** (cert-manager, Rancher Helm chart, Hetzner Node Driver) is deployed via RKE2 cloud-init manifests.
+The module uses a **two-layer architecture**: L3 infrastructure (delegated to `terraform-hcloud-rke2-core`) and L4 bootstrap (Rancher admin setup). All L4 **software** (cert-manager, Rancher Helm chart, Hetzner Node Driver, Hcloud Image Controller, Cluster Autoscaler) is deployed via RKE2 cloud-init manifests.
 
 ```
 terraform-hcloud-rancher/                # Root module (facade)
@@ -124,7 +124,8 @@ terraform-hcloud-rancher/                # Root module (facade)
 │   └── ARCHITECTURE.md                  # This document
 │
 ├── examples/
-│   └── minimal/                         # Single-node management cluster
+│   ├── minimal/                         # Single-node management cluster
+│   └── complete/                        # HA 3-node + BYO firewall + Let's Encrypt
 │
 └── tests/
     ├── variables.tftest.hcl             # Variable validation tests
@@ -532,8 +533,8 @@ flowchart LR
 |---------|---------------|--------|
 | Secrets encryption at rest | RKE2 `secrets-encryption: true` | ✅ Via terraform-hcloud-rke2-core |
 | RBAC | Kubernetes native RBAC | ✅ Built-in (RKE2) |
-| Network Policies | Default deny + explicit allow | 🔲 Planned |
-| Pod Security Standards | Admission controller | 🔲 Planned |
+| Network Policies | Default deny + explicit allow | 🟡 Operations Guide (post-deploy) |
+| Pod Security Standards | Admission controller | 🟡 Via `enable_cis` (CIS profile = restricted) |
 | etcd backup | S3-compatible backup for management etcd | 🟡 Via terraform-hcloud-rke2-core (opt-in) |
 
 ### Layer 3: Application
@@ -543,7 +544,7 @@ flowchart LR
 | TLS | Let's Encrypt via cert-manager | ✅ Implemented |
 | Rancher auth | Local admin + optional SAML/OIDC | 🟡 Partial (OIDC is post-deploy) |
 | Cloud Credential encryption | Rancher encrypts credentials in etcd | ✅ Built-in (Rancher) |
-| Audit logging | Rancher audit log | 🔲 Planned |
+| Audit logging | Rancher audit log | 🟡 Operations Guide (post-deploy) |
 
 ### Known Gaps
 

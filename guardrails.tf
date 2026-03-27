@@ -2,7 +2,7 @@
 # Preflight guardrails — cross-variable validation checks
 #
 # DECISION: All check {} blocks live in the root guardrails.tf.
-# Why: Follows the terraform-hcloud-ubuntu-rke2 pattern — root-level checks
+# Why: Follows the terraform-hcloud-rke2-core pattern — root-level checks
 #      are addressable by `tofu test` expect_failures. Checks in child modules
 #      cannot be referenced by test assertions.
 # See: docs/ARCHITECTURE.md — Module Architecture

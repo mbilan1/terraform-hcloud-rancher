@@ -129,7 +129,8 @@ Thin wrapper around `terraform-hcloud-rke2-core` that:
 | Path | Purpose |
 |------|---------|
 | `docs/` | `ARCHITECTURE.md` — **READ BEFORE ANY WORK** |
-| `examples/minimal/` | Minimal working deployment example |
+| `examples/minimal/` | Minimal working deployment (sslip.io, self-signed TLS) |
+| `examples/complete/` | HA 3-node with BYO firewall, Let's Encrypt, Packer image |
 | `tests/` | Unit tests (`tofu test`) |
 
 ---
