@@ -166,7 +166,7 @@ run "cluster_name_rejects_uppercase" {
   expect_failures = [var.cluster_name]
 }
 
-run "cluster_name_rejects_hyphens" {
+run "cluster_name_accepts_hyphens" {
   command = plan
 
   variables {
@@ -174,6 +174,17 @@ run "cluster_name_rejects_hyphens" {
     rancher_hostname = "rancher.example.com"
     admin_password   = "SecurePassword123"
     cluster_name     = "my-cluster"
+  }
+}
+
+run "cluster_name_rejects_trailing_hyphen" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    cluster_name     = "my-cluster-"
   }
 
   expect_failures = [var.cluster_name]
