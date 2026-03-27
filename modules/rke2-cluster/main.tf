@@ -17,8 +17,8 @@
 
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
-  # Tag: v0.2.0 — CIS hardening support (enable_cis)
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=995cb16446143c723063ee6d77af99ec4824e356"
+  # Tag: v0.2.1+ — CIS hardening support, docs fixes, CI bumps
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=ec116606be7af805981380b46ccb8a84fd92ff44"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
