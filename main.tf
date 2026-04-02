@@ -159,7 +159,7 @@ locals {
           name: rancher
           namespace: kube-system
         spec:
-          repo: https://releases.rancher.com/server-charts/stable
+          repo: https://releases.rancher.com/server-charts/${var.rancher_chart_channel}
           chart: rancher
           version: "${var.rancher_version}"
           targetNamespace: cattle-system

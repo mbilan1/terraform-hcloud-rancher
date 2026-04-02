@@ -48,6 +48,18 @@ variable "rancher_version" {
   }
 }
 
+variable "rancher_chart_channel" {
+  description = "Rancher Helm chart release channel: 'stable' or 'latest'. Use 'latest' for versions not yet in stable."
+  type        = string
+  nullable    = false
+  default     = "stable"
+
+  validation {
+    condition     = contains(["stable", "latest"], var.rancher_chart_channel)
+    error_message = "rancher_chart_channel must be 'stable' or 'latest'."
+  }
+}
+
 variable "admin_password" {
   # DECISION: Optional — auto-generates a random 24-char password when empty.
   # Why: Eliminates the manual input prompt during `tofu apply`. The generated

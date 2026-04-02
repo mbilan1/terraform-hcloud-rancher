@@ -61,11 +61,8 @@ module "cluster" {
   #      helm/kubernetes providers to have direct K8s API credentials.
   extra_server_manifests = var.extra_server_manifests
 
-  # DECISION: delete_protection hardcoded to true for management clusters.
-  # Why: The management cluster runs Rancher, which manages ALL downstream clusters.
-  #      Accidental deletion is catastrophic. Hardcoding true prevents the
-  #      rke2-core advisory check from firing in tests and enforces a sensible
-  #      production default. Users who need to destroy must disable protection
-  #      manually via the Hetzner Cloud console.
-  delete_protection = true
+  # DECISION: delete_protection passed through from parent module.
+  # Why: Production clusters need protection (default true), but dev/test
+  #      environments need fast teardown without manual Hetzner API calls.
+  delete_protection = var.delete_protection
 }
