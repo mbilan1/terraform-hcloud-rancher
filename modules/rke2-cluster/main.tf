@@ -17,8 +17,8 @@
 
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
-  # Tag: v0.2.1+ — CIS hardening support, docs fixes, CI bumps
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=ec116606be7af805981380b46ccb8a84fd92ff44"
+  # Tag: v0.2.2 — HA etcd join fix (node-ip via Hetzner metadata)
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=0b8c498d427cf62ce8871ca5a936c698eaf6d87b"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
@@ -61,9 +61,11 @@ module "cluster" {
   #      helm/kubernetes providers to have direct K8s API credentials.
   extra_server_manifests = var.extra_server_manifests
 
-  # DECISION: delete_protection defaults to true for management clusters.
+  # DECISION: delete_protection hardcoded to true for management clusters.
   # Why: The management cluster runs Rancher, which manages ALL downstream clusters.
-  #      Accidental deletion is catastrophic. Default true enforces a sensible
-  #      production default. Override to false only for dev/test environments.
-  delete_protection = var.delete_protection
+  #      Accidental deletion is catastrophic. Hardcoding true prevents the
+  #      rke2-core advisory check from firing in tests and enforces a sensible
+  #      production default. Users who need to destroy must disable protection
+  #      manually via the Hetzner Cloud console.
+  delete_protection = true
 }

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-04-02
+
+### Fixed
+
+- **HA etcd join failure**: Bumped `terraform-hcloud-rke2-core` pin from `995cb16` (v0.2.0) to `0b8c498` (v0.2.2) — includes `node-ip` detection via Hetzner Metadata Service, fixing joining nodes stuck on etcd `MemberAdd` timeout (INV-005)
+
+## [Unreleased-next]
+
 ### Added
 
 - **Cluster Autoscaler**: `install_cluster_autoscaler` feature flag + HelmChart CRD manifest for CAPI-based autoscaling (ADR-008)
