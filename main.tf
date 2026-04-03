@@ -114,12 +114,16 @@ locals {
   #      after Rancher starts — the deploy controller retries failed manifests
   #      until Rancher registers its CRDs (management.cattle.io, catalog.cattle.io).
   rancher_server_manifests = merge(
-    # DECISION: Pre-create cattle-system namespace with PSA exemption when CIS is enabled.
+    # DECISION: Pre-create system namespaces with PSA exemption when CIS is enabled.
     # Why: RKE2 CIS profile sets cluster-wide PodSecurity "restricted:latest".
-    #      Rancher pods don't comply with restricted (allowPrivilegeEscalation,
-    #      capabilities, runAsNonRoot, seccompProfile). Pre-creating the namespace
-    #      with "privileged" enforcement allows Rancher pods to start.
-    #      The manifest is applied BEFORE the Rancher HelmChart (alphabetical order).
+    #      Several Rancher system namespaces run pods that don't comply with
+    #      restricted (allowPrivilegeEscalation, capabilities, runAsNonRoot,
+    #      seccompProfile). Pre-creating them with "privileged" enforcement
+    #      prevents PodSecurity from blocking critical workloads:
+    #        - cattle-system: Rancher server pods
+    #        - fleet-default: Machine provisioning Jobs (Hetzner driver)
+    #        - cattle-fleet-system: Fleet controller
+    #      Manifests are applied BEFORE the Rancher HelmChart (alphabetical order).
     # See: https://docs.rke2.io/security/hardening_guide
     var.enable_cis ? {
       "00-cattle-system-ns.yaml" = <<-YAML
@@ -127,6 +131,28 @@ locals {
         kind: Namespace
         metadata:
           name: cattle-system
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: privileged
+            pod-security.kubernetes.io/warn: privileged
+      YAML
+
+      "00-fleet-default-ns.yaml" = <<-YAML
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: fleet-default
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: privileged
+            pod-security.kubernetes.io/warn: privileged
+      YAML
+
+      "00-cattle-fleet-system-ns.yaml" = <<-YAML
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: cattle-fleet-system
           labels:
             pod-security.kubernetes.io/enforce: privileged
             pod-security.kubernetes.io/audit: privileged

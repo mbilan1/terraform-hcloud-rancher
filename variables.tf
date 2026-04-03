@@ -419,10 +419,11 @@ variable "enable_cis" {
   #      handles prereqs + profile atomically. Prerequisites are idempotent —
   #      safe on both stock images (cloud-init creates them) and Packer-built
   #      snapshots (already baked in by rke2-base Ansible role).
-  #      Additionally creates cattle-system namespace with PSA 'privileged'
-  #      exemption so Rancher pods pass PodSecurity admission.
+  #      Additionally creates system namespaces (cattle-system, fleet-default,
+  #      cattle-fleet-system) with PSA 'privileged' exemption so Rancher pods
+  #      and machine provisioning Jobs pass PodSecurity admission.
   # See: https://docs.rke2.io/security/hardening_guide
-  description = "Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and exempts cattle-system from PodSecurity restricted policy. Works with both stock ubuntu-24.04 and Packer-built snapshots."
+  description = "Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and exempts system namespaces (cattle-system, fleet-default, cattle-fleet-system) from PodSecurity restricted policy. Works with both stock ubuntu-24.04 and Packer-built snapshots."
   type        = bool
   nullable    = false
   default     = false
