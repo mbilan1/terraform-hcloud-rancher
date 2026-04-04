@@ -109,6 +109,18 @@ variable "letsencrypt_email" {
   }
 }
 
+variable "rancher_replicas" {
+  description = "Number of Rancher server pod replicas. Set to 3 for HA (matches control_plane_nodes count). Must be 1 or 3."
+  type        = number
+  nullable    = false
+  default     = 3
+
+  validation {
+    condition     = contains([1, 3], var.rancher_replicas)
+    error_message = "rancher_replicas must be 1 or 3. Two replicas cause leader election issues."
+  }
+}
+
 variable "cert_manager_version" {
   description = "cert-manager Helm chart version to install."
   type        = string

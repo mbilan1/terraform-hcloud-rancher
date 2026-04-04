@@ -147,7 +147,7 @@ locals {
           valuesContent: |-
             hostname: "${local.effective_hostname}"
             bootstrapPassword: "${local.effective_admin_password}"
-            replicas: 1
+            replicas: ${var.rancher_replicas}
             ingress:
               tls:
                 source: ${var.tls_source}

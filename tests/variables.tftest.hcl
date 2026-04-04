@@ -723,3 +723,54 @@ run "cluster_autoscaler_version_accepts_semver" {
     cluster_autoscaler_version = "9.46.6"
   }
 }
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V20: rancher_replicas — must be 1 or 3                                ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "rancher_replicas_rejects_two" {
+  command = plan
+
+  variables {
+    hcloud_api_token  = "mock-token"
+    rancher_hostname  = "rancher.example.com"
+    admin_password    = "SecurePassword123"
+    rancher_replicas  = 2
+  }
+
+  expect_failures = [var.rancher_replicas]
+}
+
+run "rancher_replicas_rejects_zero" {
+  command = plan
+
+  variables {
+    hcloud_api_token  = "mock-token"
+    rancher_hostname  = "rancher.example.com"
+    admin_password    = "SecurePassword123"
+    rancher_replicas  = 0
+  }
+
+  expect_failures = [var.rancher_replicas]
+}
+
+run "rancher_replicas_accepts_one" {
+  command = plan
+
+  variables {
+    hcloud_api_token  = "mock-token"
+    rancher_hostname  = "rancher.example.com"
+    admin_password    = "SecurePassword123"
+    rancher_replicas  = 1
+  }
+}
+
+run "rancher_replicas_accepts_three" {
+  command = plan
+
+  variables {
+    hcloud_api_token  = "mock-token"
+    rancher_hostname  = "rancher.example.com"
+    admin_password    = "SecurePassword123"
+    rancher_replicas  = 3
+  }
+}
