@@ -419,14 +419,50 @@ variable "enable_cis" {
   #      handles prereqs + profile atomically. Prerequisites are idempotent —
   #      safe on both stock images (cloud-init creates them) and Packer-built
   #      snapshots (already baked in by rke2-base Ansible role).
-  #      Additionally creates system namespaces (cattle-system, fleet-default,
-  #      cattle-fleet-system) with PSA 'privileged' exemption so Rancher pods
-  #      and machine provisioning Jobs pass PodSecurity admission.
   # See: https://docs.rke2.io/security/hardening_guide
-  description = "Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and exempts system namespaces (cattle-system, fleet-default, cattle-fleet-system) from PodSecurity restricted policy. Works with both stock ubuntu-24.04 and Packer-built snapshots."
+  description = "Enable CIS hardening for the management cluster. Activates RKE2 CIS profile, creates prerequisites (etcd user, kernel params), and generates a custom PSA admission config that exempts Rancher system namespaces from restricted enforcement."
   type        = bool
   nullable    = false
   default     = false
+}
+
+variable "cis_psa_exempt_namespaces" {
+  # DECISION: Rancher-specific PSA exemption list, extending rke2-core defaults.
+  # Why: Rancher management clusters need 18+ system namespaces exempted from
+  #      restricted PSA enforcement. This list comes from the official Rancher
+  #      documentation and covers all Rancher internal components (Fleet, CAPI,
+  #      monitoring, logging, cert-manager, etc.). Only used when enable_cis = true.
+  # See: https://ranchermanager.docs.rancher.com/reference-guides/rancher-security/psa-restricted-exemptions
+  description = "Namespaces to exempt from CIS restricted PSA enforcement on the management cluster. Defaults to the official Rancher exemption list. Only used when enable_cis = true."
+  type        = list(string)
+  nullable    = false
+  default = [
+    # Kubernetes system
+    "kube-system",
+    "kube-public",
+    "kube-node-lease",
+    # RKE2 CIS defaults
+    "cis-operator-system",
+    "compliance-operator-system",
+    "tigera-operator",
+    # Rancher core
+    "cattle-system",
+    "cattle-global-data",
+    "cattle-global-nt",
+    "cattle-impersonation-system",
+    "cattle-resources-system",
+    # Fleet
+    "cattle-fleet-system",
+    "cattle-fleet-local-system",
+    "fleet-default",
+    "fleet-local",
+    # Provisioning
+    "cattle-provisioning-capi-system",
+    # UI
+    "cattle-ui-plugin-system",
+    # Add-ons
+    "cert-manager",
+  ]
 }
 
 variable "rke2_version" {

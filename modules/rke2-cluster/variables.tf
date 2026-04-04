@@ -99,6 +99,13 @@ variable "enable_cis" {
   nullable    = false
 }
 
+variable "cis_psa_exempt_namespaces" {
+  description = "Namespaces to exempt from CIS restricted PSA enforcement. Only used when enable_cis = true."
+  type        = list(string)
+  default     = ["kube-system", "cis-operator-system", "tigera-operator"]
+  nullable    = false
+}
+
 # ── SSH Key (BYO passthrough) ────────────────────────────────────────────────
 
 variable "ssh_key_ids" {

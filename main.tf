@@ -114,52 +114,6 @@ locals {
   #      after Rancher starts — the deploy controller retries failed manifests
   #      until Rancher registers its CRDs (management.cattle.io, catalog.cattle.io).
   rancher_server_manifests = merge(
-    # DECISION: Pre-create system namespaces with PSA exemption when CIS is enabled.
-    # Why: RKE2 CIS profile sets cluster-wide PodSecurity "restricted:latest".
-    #      Several Rancher system namespaces run pods that don't comply with
-    #      restricted (allowPrivilegeEscalation, capabilities, runAsNonRoot,
-    #      seccompProfile). Pre-creating them with "privileged" enforcement
-    #      prevents PodSecurity from blocking critical workloads:
-    #        - cattle-system: Rancher server pods
-    #        - fleet-default: Machine provisioning Jobs (Hetzner driver)
-    #        - cattle-fleet-system: Fleet controller
-    #      Manifests are applied BEFORE the Rancher HelmChart (alphabetical order).
-    # See: https://docs.rke2.io/security/hardening_guide
-    var.enable_cis ? {
-      "00-cattle-system-ns.yaml" = <<-YAML
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: cattle-system
-          labels:
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/warn: privileged
-      YAML
-
-      "00-fleet-default-ns.yaml" = <<-YAML
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: fleet-default
-          labels:
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/warn: privileged
-      YAML
-
-      "00-cattle-fleet-system-ns.yaml" = <<-YAML
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: cattle-fleet-system
-          labels:
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/warn: privileged
-      YAML
-    } : {},
-
     {
       "00-cert-manager.yaml" = <<-YAML
         apiVersion: helm.cattle.io/v1
@@ -378,6 +332,8 @@ module "rke2_cluster" {
   rke2_version = var.rke2_version
   rke2_config  = var.rke2_config
   enable_cis   = var.enable_cis
+
+  cis_psa_exempt_namespaces = var.cis_psa_exempt_namespaces
 
   # SSH Key (BYO passthrough)
   ssh_key_ids = var.ssh_key_ids

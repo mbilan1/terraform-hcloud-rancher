@@ -17,8 +17,8 @@
 
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
-  # Tag: v0.2.2 — HA etcd join fix (node-ip via Hetzner metadata)
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=076187879d1297e37685203f868d3f8c632893f7"
+  # Tag: v0.3.0 — custom PSA admission config for CIS (cis_psa_exempt_namespaces)
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=cb54932c4c893a86fd9451d200e36ccdf73719f4"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
@@ -48,6 +48,8 @@ module "cluster" {
   rke2_version = var.rke2_version
   rke2_config  = var.rke2_config
   enable_cis   = var.enable_cis
+
+  cis_psa_exempt_namespaces = var.cis_psa_exempt_namespaces
 
   # ── SSH Key (BYO passthrough) ───────────────────────────────────────────
   ssh_key_ids = var.ssh_key_ids
