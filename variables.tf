@@ -470,8 +470,14 @@ variable "cis_psa_exempt_namespaces" {
     "fleet-local",
     # Provisioning
     "cattle-provisioning-capi-system",
+    "cattle-turtles-system",
     # UI
     "cattle-ui-plugin-system",
+    # Monitoring & Logging
+    "cattle-monitoring-system",
+    "cattle-logging-system",
+    "cattle-prometheus",
+    "rancher-alerting-drivers",
     # Add-ons
     "cert-manager",
   ]
