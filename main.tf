@@ -302,6 +302,30 @@ locals {
               node-group-auto-discovery: "clusterapi:namespace=fleet-default"
       YAML
     } : {},
+
+    # DECISION: Pre-create ALL CIS PSA exempt namespaces with privileged labels.
+    # Why: When enable_cis = true, the cluster-wide PSA default is restricted:latest.
+    #      Rancher Cluster Tools (monitoring, logging, etc.) create namespaces at
+    #      runtime without PSA labels, inheriting the restricted default. This blocks
+    #      privileged workloads (DaemonSets, hostNetwork pods) that system components
+    #      need. Pre-creating exempt namespaces with privileged labels is defense-in-depth:
+    #      AdmissionConfiguration exempts them at API server level, and namespace labels
+    #      exempt them at admission controller level.
+    #      RKE2 deploy controller applies these via server-side apply — safe for both
+    #      new namespaces (creates them) and existing ones (merges labels).
+    # See: https://ranchermanager.docs.rancher.com/reference-guides/rancher-security/psa-restricted-exemptions
+    var.enable_cis ? {
+      for ns in var.cis_psa_exempt_namespaces : "00-psa-ns-${ns}.yaml" => <<-YAML
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: ${ns}
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: privileged
+            pod-security.kubernetes.io/warn: privileged
+      YAML
+    } : {},
   )
 }
 
