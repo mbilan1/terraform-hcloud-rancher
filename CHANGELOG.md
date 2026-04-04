@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-04-04
+
 ### Fixed
 
 - **CIS PSA exemption**: Pre-create `fleet-default` and `cattle-fleet-system` namespaces with `privileged` PodSecurity labels when `enable_cis = true`. Without this, RKE2 CIS profile blocks machine provisioning Jobs and Fleet controller pods in these namespaces (`restricted:latest` rejects pods missing seccompProfile, runAsNonRoot, capabilities drop).
