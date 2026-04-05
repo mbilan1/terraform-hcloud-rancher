@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-04-05
+
+### Changed
+
+- **Ingress LB algorithm**: Set `least_connections` instead of default `round_robin` on `hcloud_load_balancer.ingress` for better traffic distribution across control plane nodes
+
 ## [0.3.2] - 2026-04-04
 
 ### Fixed

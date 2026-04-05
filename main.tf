@@ -398,6 +398,10 @@ resource "hcloud_load_balancer" "ingress" {
   load_balancer_type = "lb11"
   location           = var.node_location
 
+  algorithm {
+    type = "least_connections"
+  }
+
   labels = {
     "cluster-name" = var.cluster_name
     "managed-by"   = "opentofu"
