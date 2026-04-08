@@ -40,7 +40,7 @@ variable "rancher_version" {
   description = "Rancher Helm chart version to install (e.g. '2.13.3'). Must be compatible with the Kubernetes version."
   type        = string
   nullable    = false
-  default     = "2.13.3"
+  default     = "2.14.0"
 
   validation {
     condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.rancher_version))
@@ -125,7 +125,7 @@ variable "cert_manager_version" {
   description = "cert-manager Helm chart version to install."
   type        = string
   nullable    = false
-  default     = "1.17.2"
+  default     = "1.20.1"
 
   validation {
     condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.cert_manager_version))
@@ -195,7 +195,7 @@ variable "hcloud_image_rke2_version" {
   description = "Default RKE2 version baked into controller-triggered Packer snapshots. Used as DEFAULT_RKE2_VERSION env var in the controller."
   type        = string
   nullable    = false
-  default     = "v1.34.4+rke2r1"
+  default     = "v1.35.3+rke2r1"
 
   validation {
     condition     = can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.hcloud_image_rke2_version))
@@ -224,7 +224,7 @@ variable "cluster_autoscaler_version" {
   description = "Cluster Autoscaler Helm chart version (kubernetes/autoscaler)."
   type        = string
   nullable    = false
-  default     = "9.46.6"
+  default     = "9.56.0"
 
   validation {
     condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.cluster_autoscaler_version))
@@ -487,7 +487,7 @@ variable "rke2_version" {
   description = "RKE2 release tag to deploy (e.g. 'v1.34.4+rke2r1'). Leave empty for stable channel."
   type        = string
   nullable    = false
-  default     = "v1.34.4+rke2r1"
+  default     = "v1.35.3+rke2r1"
 
   validation {
     condition     = var.rke2_version == "" || can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.rke2_version))

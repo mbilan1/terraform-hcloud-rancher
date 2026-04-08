@@ -17,8 +17,8 @@
 
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
-  # Tag: v0.3.0 — custom PSA admission config for CIS (cis_psa_exempt_namespaces)
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=cb54932c4c893a86fd9451d200e36ccdf73719f4"
+  # Tag: v0.4.0 — RKE2 default bumped to v1.35.3+rke2r1
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=7f502d1f2166719ac9e00780921b1d2cdbe34bdc"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-08
+
+### Changed
+
+- **Rancher default version**: Bumped from `2.13.3` to `2.14.0`
+- **cert-manager default version**: Bumped from `1.17.2` to `1.20.1`
+- **Cluster Autoscaler default version**: Bumped from `9.46.6` to `9.56.0`
+- **RKE2 default version**: Bumped from `v1.34.4+rke2r1` to `v1.35.3+rke2r1`
+- **rke2-core pin**: Updated to `v0.4.0` (RKE2 v1.35.3+rke2r1)
+
 ## [0.5.3] - 2026-04-05
 
 ### Changed
