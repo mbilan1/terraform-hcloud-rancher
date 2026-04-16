@@ -109,6 +109,18 @@ variable "letsencrypt_email" {
   }
 }
 
+variable "letsencrypt_environment" {
+  description = "Let's Encrypt ACME environment. 'production' uses the real CA (rate-limited). 'staging' uses the staging CA (not browser-trusted, no rate limits). Only used when tls_source = 'letsEncrypt'."
+  type        = string
+  nullable    = false
+  default     = "production"
+
+  validation {
+    condition     = contains(["production", "staging"], var.letsencrypt_environment)
+    error_message = "letsencrypt_environment must be 'production' or 'staging'."
+  }
+}
+
 variable "rancher_replicas" {
   description = "Number of Rancher server pod replicas. Set to 3 for HA (matches control_plane_nodes count). Must be 1 or 3."
   type        = number

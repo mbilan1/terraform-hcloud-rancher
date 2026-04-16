@@ -154,6 +154,7 @@ locals {
 %{if var.tls_source == "letsEncrypt"~}
             letsEncrypt:
               email: ${var.letsencrypt_email}
+              environment: ${var.letsencrypt_environment}
 %{endif~}
       YAML
     },
@@ -326,6 +327,44 @@ locals {
             pod-security.kubernetes.io/warn: privileged
       YAML
     } : {},
+
+    # WORKAROUND: Grant fleet-controller the "updatepsa" verb on projects.
+    # Why: Rancher v2.14.0 (#53268) added namespace label reconciliation — the
+    #      mutating webhook now injects PSA labels on Rancher-managed namespaces.
+    #      The validating webhook (psalabels.go) then performs a SubjectAccessReview
+    #      for the custom "updatepsa" verb on management.cattle.io/v3 projects.
+    #      Fleet's fleet-agentmanagement container updates cattle-fleet-system
+    #      namespace at startup, triggering this chain. Without the verb, the SAR
+    #      returns Allowed=false → webhook returns Unauthorized → fatal crash
+    #      (CrashLoopBackOff with 1500+ restarts).
+    # TODO: Remove when Rancher ships a fix (fleet-controller SA should include
+    #       updatepsa out of the box). Track: rancher/rancher#44402
+    # See: rancher/webhook pkg/resources/core/v1/namespace/psalabels.go
+    {
+      "05-fleet-psa-rbac.yaml" = <<-YAML
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: fleet-controller-psa
+        rules:
+        - apiGroups: ["management.cattle.io"]
+          resources: ["projects"]
+          verbs: ["updatepsa"]
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: fleet-controller-psa
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: fleet-controller-psa
+        subjects:
+        - kind: ServiceAccount
+          name: fleet-controller
+          namespace: cattle-fleet-system
+      YAML
+    },
   )
 }
 

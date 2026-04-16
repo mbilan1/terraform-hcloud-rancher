@@ -35,3 +35,5 @@ rancher-host-key
 
 # ─── Python virtual environment (compliance tooling) ───
 .venv/
+# ─── Local debug / ad-hoc scripts ───
+sono-check.sh

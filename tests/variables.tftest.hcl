@@ -618,6 +618,44 @@ run "letsencrypt_email_rejects_invalid" {
 }
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V16a: letsencrypt_environment — accepts production / staging         ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "letsencrypt_environment_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token        = "mock-token"
+    rancher_hostname        = "rancher.example.com"
+    admin_password          = "SecurePassword123"
+    letsencrypt_environment = "dev"
+  }
+
+  expect_failures = [var.letsencrypt_environment]
+}
+
+run "letsencrypt_environment_accepts_production" {
+  command = plan
+
+  variables {
+    hcloud_api_token        = "mock-token"
+    rancher_hostname        = "rancher.example.com"
+    admin_password          = "SecurePassword123"
+    letsencrypt_environment = "production"
+  }
+}
+
+run "letsencrypt_environment_accepts_staging" {
+  command = plan
+
+  variables {
+    hcloud_api_token        = "mock-token"
+    rancher_hostname        = "rancher.example.com"
+    admin_password          = "SecurePassword123"
+    letsencrypt_environment = "staging"
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  UT-V17: enable_cis — accepts true/false                                  ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 run "enable_cis_default_false" {
@@ -731,10 +769,10 @@ run "rancher_replicas_rejects_two" {
   command = plan
 
   variables {
-    hcloud_api_token  = "mock-token"
-    rancher_hostname  = "rancher.example.com"
-    admin_password    = "SecurePassword123"
-    rancher_replicas  = 2
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    rancher_replicas = 2
   }
 
   expect_failures = [var.rancher_replicas]
@@ -744,10 +782,10 @@ run "rancher_replicas_rejects_zero" {
   command = plan
 
   variables {
-    hcloud_api_token  = "mock-token"
-    rancher_hostname  = "rancher.example.com"
-    admin_password    = "SecurePassword123"
-    rancher_replicas  = 0
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    rancher_replicas = 0
   }
 
   expect_failures = [var.rancher_replicas]
@@ -757,10 +795,10 @@ run "rancher_replicas_accepts_one" {
   command = plan
 
   variables {
-    hcloud_api_token  = "mock-token"
-    rancher_hostname  = "rancher.example.com"
-    admin_password    = "SecurePassword123"
-    rancher_replicas  = 1
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    rancher_replicas = 1
   }
 }
 
@@ -768,9 +806,9 @@ run "rancher_replicas_accepts_three" {
   command = plan
 
   variables {
-    hcloud_api_token  = "mock-token"
-    rancher_hostname  = "rancher.example.com"
-    admin_password    = "SecurePassword123"
-    rancher_replicas  = 3
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    rancher_replicas = 3
   }
 }

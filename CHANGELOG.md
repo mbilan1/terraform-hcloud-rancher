@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-04-16
+
+### Added
+
+- **Fleet PSA RBAC pre-creation**: New raw manifest `05-fleet-psa-rbac.yaml` creates `ClusterRole fleet-controller-psa` (verb `updatepsa` on `management.cattle.io/projects`) and `ClusterRoleBinding` for the `fleet-controller` ServiceAccount in `cattle-fleet-system`. Fixes `fleet-agentmanagement` `CrashLoopBackOff` introduced by Rancher 2.14.0 namespace label reconciliation (rancher/rancher#53268, #44402). Validated on rancher-management-dev.abzt.de — 0 restarts after fix.
+- **`letsencrypt_environment` variable**: New string variable (default `"production"`, accepts `"production"` or `"staging"`). Renders `letsEncrypt.environment` in the Rancher HelmChart values. Allows DEV/staging deploys to use the Let's Encrypt staging CA and avoid ACME rate limits.
+- **Tests**: 3 new unit tests for `letsencrypt_environment` (rejects invalid, accepts production, accepts staging).
+
+### Fixed
+
+- **Test file formatting**: `tofu fmt` cleanup in `tests/variables.tftest.hcl` (alignment of `rancher_replicas` test variables).
+
 ## [0.6.0] - 2026-04-08
 
 ### Changed
