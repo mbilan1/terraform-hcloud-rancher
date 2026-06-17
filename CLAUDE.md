@@ -155,7 +155,7 @@ All L4 software is deployed via cloud-init HelmChart CRDs and raw manifests — 
 - DNS is **BYO** — the module does NOT manage DNS records
 
 ### Dual Load Balancer (BYO pattern)
-- **Control-plane LB**: Created by rke2-core (ports 6443, 9345)
+- **Control-plane LB**: NOT created by this module or rke2-core. The RKE2 client-side load balancer handles control-plane registration failover (6443, 9345). A control-plane LB is an optional BYO.
 - **Ingress LB**: Created in root `main.tf` with `for_each` gating (ports 80, 443 for Rancher UI)
 - Set `create_ingress_lb = false` + `existing_ingress_lb_ipv4` for BYO
 - Do NOT merge them (ADR-003).

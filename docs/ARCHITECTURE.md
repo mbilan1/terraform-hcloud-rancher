@@ -182,7 +182,6 @@ flowchart TB
 
     subgraph hetzner["Hetzner Cloud Project: rancher-management"]
         subgraph lb_layer["Load Balancers"]
-            cp_lb["Control Plane LB\nlb11\n6443 / 9345"]
             ingress_lb["Ingress LB\nlb11\n80 / 443"]
         end
 
@@ -204,9 +203,8 @@ flowchart TB
     end
 
     operator -->|"Rancher UI :443"| ingress_lb
-    operator -->|"kubectl :6443"| cp_lb
+    operator -->|"kubectl :6443 (no CP LB; RKE2 client-side LB)"| node
 
-    cp_lb --> node
     ingress_lb --> node
     node --- subnet
 
@@ -219,7 +217,7 @@ flowchart TB
 | Component | Spec | Notes |
 |-----------|------|-------|
 | Nodes | 1 × cx43 (8 vCPU, 16 GB) | Rancher minimum for ≤5 downstream clusters |
-| LB (control plane) | lb11 | Ports 6443, 9345 — managed by rke2-core |
+| LB (control plane) | none (optional BYO) | NOT created by rke2-core; RKE2 client-side load balancer handles 6443/9345 registration failover |
 | LB (ingress) | lb11 | Ports 80, 443 — Rancher UI (BYO pattern, managed in root `main.tf`) |
 | Network | 10.0.0.0/16 | Private subnet |
 | DNS | BYO or sslip.io | Auto-generates hostname from ingress LB IP; or set `rancher_hostname` |
@@ -599,7 +597,7 @@ After the initial deployment, rotate the admin password via Rancher UI to limit 
 flowchart TB
     subgraph account["Hetzner Account"]
         subgraph mgmt["Project: rancher-mgmt"]
-            mgmt_cluster["Management Cluster\n1×cx43 + 2×lb11"]
+            mgmt_cluster["Management Cluster\n1×cx43 + 1×lb11 (ingress)"]
         end
 
         subgraph downstream_a["Project: downstream-a"]
