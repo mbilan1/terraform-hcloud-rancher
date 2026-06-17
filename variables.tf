@@ -405,14 +405,14 @@ variable "delete_protection" {
 
 variable "hcloud_image" {
   # DECISION: Feature flag for Packer baked images (CIS-hardened snapshots).
-  # Why: Default is ubuntu-24.04 (standard cloud image). When a Packer snapshot
+  # Why: Default is ubuntu-26.04 (standard cloud image). When a Packer snapshot
   #      ID is provided, all management cluster nodes use the pre-hardened image
   #      instead. This enables CIS Level 1 hardening at the OS layer without
   #      runtime modification.
-  description = "OS image for management cluster nodes. Use 'ubuntu-24.04' (default) or a Hetzner snapshot ID from a Packer baked image."
+  description = "OS image for management cluster nodes. Use 'ubuntu-26.04' (default) or a Hetzner snapshot ID from a Packer baked image."
   type        = string
   nullable    = false
-  default     = "ubuntu-24.04"
+  default     = "ubuntu-26.04"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════

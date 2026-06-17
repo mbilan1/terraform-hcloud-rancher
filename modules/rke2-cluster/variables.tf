@@ -70,9 +70,9 @@ variable "hcloud_network_zone" {
 # ── OS Image ─────────────────────────────────────────────────────────────────
 
 variable "hcloud_image" {
-  description = "OS image for nodes. Use 'ubuntu-24.04' or a Hetzner snapshot ID."
+  description = "OS image for nodes. Use 'ubuntu-26.04' or a Hetzner snapshot ID."
   type        = string
-  default     = "ubuntu-24.04"
+  default     = "ubuntu-26.04"
   nullable    = false
 }
 

@@ -17,8 +17,8 @@
 
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
-  # Tag: v0.4.0 — RKE2 default bumped to v1.35.3+rke2r1
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=7f502d1f2166719ac9e00780921b1d2cdbe34bdc"
+  # Tag: v0.5.0 — Ubuntu 26.04 + RKE2 v1.35.5+rke2r2 + providers (hcloud 1.65.0, random 3.9.0)
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=32069bc25b6d6678cdb2849942603cd82913944f"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name

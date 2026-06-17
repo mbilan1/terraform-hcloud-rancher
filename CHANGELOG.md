@@ -15,7 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Version bumps to latest compatible** (verified against the Rancher v2.14.2 support matrix):
   - **Rancher** `2.14.0` → `2.14.2`; **RKE2** `v1.35.3+rke2r1` → `v1.35.5+rke2r2` (latest patch in the Rancher-2.14.2-certified `1.35` minor — Rancher 2.14.2 supports K8s 1.33–1.35, default v1.35.4; **1.36 is not yet supported**, so the minor is held at 1.35); **cert-manager** `1.20.1` → `1.20.2`; **Cluster Autoscaler** chart `9.56.0` → `9.57.0`.
   - **Providers**: `hcloud` `1.60.1` → `1.65.0`; `rancher2` `13.1.4` → `14.1.1` (the provider major tracks the Rancher minor — v14.x is the Rancher 2.14 line; bootstrap-only usage is unaffected, no breaking changes to `rancher2_bootstrap`); `random` `3.8.1` → `3.9.0`.
-  - **Unchanged**: rke2-core pin stays `v0.4.0` (latest tag); OS stays **Ubuntu 24.04 LTS** (26.04 LTS released 2026-04 but is not yet in the RKE2/Rancher support matrix). README version badges synced.
+  - **OS image**: **Ubuntu 24.04 → 26.04** (root + `rke2-cluster` `hcloud_image` default). Ubuntu 26.04 is available on Hetzner Cloud (`ubuntu-26.04`, added 2026-05-18) but is **not yet in the RKE2 v1.35 / Rancher 2.14 support matrix** (validated 24.04/22.04/20.04) — adopted per explicit operator requirement; revisit once it appears in the matrix.
+  - **rke2-core pin**: `v0.4.0` → **`v0.5.0`** (commit `32069bc`), which carries the same Ubuntu 26.04 + RKE2 `v1.35.5+rke2r2` + provider (`hcloud` 1.65.0, `random` 3.9.0) bumps down to the L3 layer. README version badges synced.
 
 ## [0.7.0] - 2026-04-16
 
