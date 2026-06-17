@@ -30,7 +30,7 @@ terraform {
 
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "= 1.60.1"
+      version = "= 1.65.0"
     }
 
     # ── L4: Rancher management provider ───────────────────────────────────────
@@ -39,7 +39,7 @@ terraform {
 
     rancher2 = {
       source  = "rancher/rancher2"
-      version = "= 13.1.4"
+      version = "= 14.1.1"
     }
 
     # ── Utility: random_password for auto-generated admin password ────────────
@@ -47,7 +47,7 @@ terraform {
 
     random = {
       source  = "hashicorp/random"
-      version = "= 3.8.1"
+      version = "= 3.9.0"
     }
   }
 }
@@ -60,9 +60,9 @@ terraform {
 #
 # | Provider              | Source                  | Version   | Updated    |
 # |-----------------------|-------------------------|-----------|------------|
-# | hcloud                | hetznercloud/hcloud     | 1.60.1    | 2026-02-26 |
-# | rancher2              | rancher/rancher2        | 13.1.4    | 2026-02-26 |
-# | random                | hashicorp/random        | 3.8.1     | 2026-03-07 |
+# | hcloud                | hetznercloud/hcloud     | 1.65.0    | 2026-06-17 |
+# | rancher2              | rancher/rancher2        | 14.1.1    | 2026-06-17 |
+# | random                | hashicorp/random        | 3.9.0     | 2026-06-17 |
 # | kubectl (REMOVED)     | alekc/kubectl           | -         | 2026-03-04 |
 # | helm (REMOVED)        | hashicorp/helm          | -         | 2026-03-02 |
 # | kubernetes (REMOVED)  | hashicorp/kubernetes    | -         | 2026-03-02 |

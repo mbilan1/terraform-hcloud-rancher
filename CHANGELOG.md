@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Rancher pod QoS / OOM resilience**: Pin `resources` (requests `cpu=500m`/`memory=1Gi`, limit `memory=2Gi`, no CPU limit) on the Rancher HelmChart values. The chart ships no resources by default, leaving pods in BestEffort QoS (`oom_score_adj=1000`) — the first victims of the node OOM-killer under memory pressure, which can kill the Rancher leader and stall the `rancher-system-agent` plan-watch that downstream provisioning depends on. Requests promote the pods to Burstable QoS so they survive pressure.
 
+### Changed
+
+- **Version bumps to latest compatible** (verified against the Rancher v2.14.2 support matrix):
+  - **Rancher** `2.14.0` → `2.14.2`; **RKE2** `v1.35.3+rke2r1` → `v1.35.5+rke2r2` (latest patch in the Rancher-2.14.2-certified `1.35` minor — Rancher 2.14.2 supports K8s 1.33–1.35, default v1.35.4; **1.36 is not yet supported**, so the minor is held at 1.35); **cert-manager** `1.20.1` → `1.20.2`; **Cluster Autoscaler** chart `9.56.0` → `9.57.0`.
+  - **Providers**: `hcloud` `1.60.1` → `1.65.0`; `rancher2` `13.1.4` → `14.1.1` (the provider major tracks the Rancher minor — v14.x is the Rancher 2.14 line; bootstrap-only usage is unaffected, no breaking changes to `rancher2_bootstrap`); `random` `3.8.1` → `3.9.0`.
+  - **Unchanged**: rke2-core pin stays `v0.4.0` (latest tag); OS stays **Ubuntu 24.04 LTS** (26.04 LTS released 2026-04 but is not yet in the RKE2/Rancher support matrix). README version badges synced.
+
 ## [0.7.0] - 2026-04-16
 
 ### Added
