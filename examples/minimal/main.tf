@@ -55,9 +55,12 @@ module "rancher_management" {
 
   # ── CIS hardening (opt-in) ───────────────────────────────────────────────
   # Set enable_cis = true for RKE2 CIS profile (etcd user, kernel params,
-  # PSA restricted). Works with both stock ubuntu-24.04 and Packer-built snapshots.
-  # For full host-level CIS L1, additionally use a Packer snapshot built with
-  # enable_cis_hardening=true (see packer-hcloud-rke2 repo).
+  # PSA restricted). Works with both stock ubuntu-24.04 and golden-image snapshots.
+  # For full host-level CIS L1, additionally use a golden-image snapshot with the
+  # host hardening baked in.
+  # NOTE: The golden-image build backend is pending selection — the previous
+  #       Packer-based image builder was dropped (non-free license + poor Hetzner
+  #       Cloud compatibility); no OSS replacement is selected yet (ADR-012).
   # enable_cis = true
 
   # ── Firewall (BYO) ─────────────────────────────────────────────────────────

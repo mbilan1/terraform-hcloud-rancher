@@ -5,13 +5,15 @@
 # - 3-node HA control plane (etcd quorum)
 # - BYO firewall with restrictive rules (ADR-006)
 # - Let's Encrypt TLS via cert-manager ACME
-# - Packer baked CIS-hardened image (ADR-009)
+# - Golden-image CIS-hardened snapshot (ADR-009; build backend pending selection)
 # - etcd S3 backup to Hetzner Object Storage
 # - Custom hostname (real DNS required)
 #
 # Prerequisites:
 #   1. A real domain with DNS access (for Let's Encrypt)
-#   2. A Packer snapshot ID (from packer-hcloud-rke2)
+#   2. A golden-image CIS-hardened snapshot ID (build backend pending; the
+#      previous Packer-based image builder was dropped — non-free license +
+#      poor Hetzner Cloud compatibility — and no OSS replacement is selected yet)
 #   3. Hetzner Object Storage credentials (for etcd backup)
 #
 # Usage:
@@ -52,10 +54,13 @@ module "rancher_management" {
   control_plane_server_type = "cx43"
   node_location             = "hel1"
 
-  # DECISION: Use Packer baked CIS-hardened image.
+  # DECISION: Use a golden-image CIS-hardened snapshot.
   # Why: CIS Level 1 prerequisites (etcd user, kernel modules, sysctl params)
-  #      must exist before RKE2 starts. Packer snapshot bakes them in.
-  # See: packer-hcloud-rke2 repo, ADR-009: Golden Image Delivery
+  #      must exist before RKE2 starts. A golden-image snapshot bakes them in.
+  # NOTE: The golden-image build backend is pending selection — the previous
+  #       Packer-based image builder was dropped (non-free license + poor
+  #       Hetzner Cloud compatibility); no OSS replacement is selected yet.
+  # See: ADR-009 (Golden Image Delivery), ADR-012 (OSS image controller)
   hcloud_image = var.hcloud_image
 
   # ── Firewall (BYO per ADR-006) ─────────────────────────────────────────────

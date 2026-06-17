@@ -36,12 +36,14 @@ This module is part of the **RKE2-on-Hetzner** ecosystem — a set of interconne
 | [`terraform-hcloud-rke2-core`](https://github.com/mbilan1/terraform-hcloud-rke2-core) | L3 infrastructure primitive — servers, network, readiness |
 | **`terraform-hcloud-rancher`** (this repo) | **Management cluster — Rancher + Node Driver on RKE2** |
 | [`rancher-hetzner-cluster-templates`](https://github.com/mbilan1/rancher-hetzner-cluster-templates) | Downstream cluster provisioning via Rancher UI |
-| [`packer-hcloud-rke2`](https://github.com/mbilan1/packer-hcloud-rke2) | Packer node image — CIS-hardened snapshots |
+| [`rancher-hcloud-image-controller`](https://github.com/mbilan1/rancher-hcloud-image-controller) | OSS image controller — watches HetznerConfig, resolves `golden:*`, triggers build Jobs (ADR-012) |
+
+> **Golden-image build backend**: pending selection. The previous Packer-based image builder was dropped (non-free license + poor Hetzner Cloud compatibility); an open-source replacement has not yet been selected. The golden-image delivery concept continues via the OSS image controller (ADR-012).
 
 ```
 rke2-core (L3 infra) → rancher (L3+L4 management) → cluster-templates (downstream via UI)
                                                     ↑
-                                        packer (node images)
+                                  image controller (golden:* → build backend pending)
 ```
 
 ## Features

@@ -4,14 +4,14 @@ Production-ready example with:
 - **3-node HA** control plane (etcd quorum)
 - **BYO firewall** with restrictive operator-only CIDR rules (ADR-006)
 - **Let's Encrypt** TLS (requires real DNS)
-- **Packer baked image** support for CIS-hardened nodes (ADR-009)
+- **Golden-image** support for CIS-hardened nodes (ADR-009) — build backend pending selection
 - **etcd S3 backup** to Hetzner Object Storage (optional)
 
 ## Prerequisites
 
 1. **DNS access** — create an A record `rancher.example.com → <ingress LB IP>` after first apply
 2. **Hetzner API token** — for the management project (read/write)
-3. **Packer snapshot** (optional) — build with `packer-hcloud-rke2` for CIS-hardened nodes
+3. **CIS-hardened snapshot** (optional) — a golden-image snapshot ID for CIS-hardened nodes. The golden-image build backend is pending selection: the previous Packer-based image builder was dropped (non-free license + poor Hetzner Cloud compatibility) and an open-source replacement has not yet been selected. The `enable_cis` RKE2 profile works on stock `ubuntu-24.04` in the meantime.
 
 ## Quick Start
 
@@ -34,13 +34,12 @@ After apply:
 
 ## With CIS-Hardened Image
 
-```bash
-# Build golden image first
-cd /path/to/packer-hcloud-rke2
-packer build -var "hcloud_token=$HCLOUD_TOKEN" -var "enable_cis_hardening=true" .
+> Superseded (2026-06-18): the Packer-based image builder was dropped (non-free license + poor Hetzner compatibility); the golden-image build backend is pending selection. The golden-image delivery concept continues via the OSS image controller (ADR-012). The build command below documented the previous Packer-based image builder; replace it once a new backend is selected.
 
-# Use the snapshot ID
-export TF_VAR_hcloud_image="12345678"  # from Packer output
+```bash
+# Build the golden image with the selected build backend (backend pending),
+# then use the resulting Hetzner snapshot ID:
+export TF_VAR_hcloud_image="12345678"  # snapshot ID from the build backend output
 ```
 
 ## With etcd S3 Backup
