@@ -419,6 +419,10 @@ module "rke2_cluster" {
 
   cis_psa_exempt_namespaces = var.cis_psa_exempt_namespaces
 
+  # Control-plane bootstrap reassignment (initial-node replaceability — ADR-016 L3a)
+  control_plane_bootstrap_complete     = var.control_plane_bootstrap_complete
+  control_plane_bootstrap_join_address = var.control_plane_bootstrap_join_address
+
   # SSH Key (BYO passthrough)
   ssh_key_ids = var.ssh_key_ids
 

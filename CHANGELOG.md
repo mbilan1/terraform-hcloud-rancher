@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-18
+
+### Added
+
+- **Initial-node bootstrap reassignment passthrough**: New `control_plane_bootstrap_complete` + `control_plane_bootstrap_join_address` variables, forwarded through `modules/rke2-cluster` to `terraform-hcloud-rke2-core`. When `control_plane_bootstrap_complete = true`, a re-provisioned initial control-plane node joins the existing etcd (renders as a joining RKE2 server) instead of re-running cluster-init — enabling quorum-safe re-provision / OS migration of the initial node without a new empty etcd (data-loss SPOF). Default `false` = genesis behavior unchanged. No load balancer (peer join by private IP). See ADR-016 L3a.
+
+### Changed
+
+- **rke2-core pin**: `v0.5.0` (`32069bc`) → **`v0.6.0`** (`e43c9ef`) — carries the node-side initial-node bootstrap reassignment down to the L3 layer.
+
 ## [0.8.0] - 2026-06-17
 
 ### Fixed

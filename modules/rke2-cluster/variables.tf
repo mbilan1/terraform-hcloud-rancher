@@ -144,3 +144,19 @@ variable "delete_protection" {
   default     = true
   nullable    = false
 }
+
+# ── Control-plane bootstrap reassignment (initial-node replaceability) ────────
+
+variable "control_plane_bootstrap_complete" {
+  description = "After the initial cluster bootstrap, set true so a re-provisioned initial node joins the existing etcd (renders as a joining RKE2 server) instead of re-running cluster-init. MUST remain false during the very first genesis apply."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
+variable "control_plane_bootstrap_join_address" {
+  description = "Private IPv4 of a surviving control-plane peer, used as the re-provisioned initial node server target. Required when control_plane_bootstrap_complete = true."
+  type        = string
+  default     = ""
+  nullable    = false
+}

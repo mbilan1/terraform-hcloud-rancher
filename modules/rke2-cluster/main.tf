@@ -17,8 +17,8 @@
 
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
-  # Tag: v0.5.0 — Ubuntu 26.04 + RKE2 v1.35.5+rke2r2 + providers (hcloud 1.65.0, random 3.9.0)
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=32069bc25b6d6678cdb2849942603cd82913944f"
+  # Tag: v0.6.0 — node-side initial-node bootstrap reassignment (control_plane_bootstrap_*)
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=e43c9efc583a7d1234e0382c4a89cc4870f34324"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
@@ -67,4 +67,14 @@ module "cluster" {
   # Why: Production clusters need protection (default true), but dev/test
   #      environments need fast teardown without manual Hetzner API calls.
   delete_protection = var.delete_protection
+
+  # ── Control-plane bootstrap reassignment (initial-node replaceability) ─────
+  # DECISION: Pass node-side bootstrap reassignment through to rke2-core.
+  # Why: Lets a re-provisioned initial CP node join the existing etcd instead of
+  #      re-running cluster-init (which would bootstrap a new empty etcd = data-loss
+  #      SPOF). Default off = genesis behavior unchanged. No load balancer — peer
+  #      join is by private IP.
+  # See: ADR-016 L3a in rke2-hetzner-architecture
+  control_plane_bootstrap_complete     = var.control_plane_bootstrap_complete
+  control_plane_bootstrap_join_address = var.control_plane_bootstrap_join_address
 }

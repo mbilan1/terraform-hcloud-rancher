@@ -506,3 +506,27 @@ variable "rke2_version" {
     error_message = "rke2_version must look like 'vX.Y.Z+rke2rN' (or be empty)."
   }
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Control-plane bootstrap reassignment (initial-node replaceability)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# DECISION: Passthrough for node-side initial-node bootstrap reassignment (rke2-core).
+# Why: Lets a re-provisioned initial control-plane node join the existing etcd
+#      (renders as a joining RKE2 server) instead of re-running cluster-init, which
+#      would bootstrap a NEW empty etcd (data-loss SPOF). Required for quorum-safe
+#      re-provision / OS migration of the initial node. Default off = genesis behavior.
+# See: ADR-016 L3a in rke2-hetzner-architecture
+variable "control_plane_bootstrap_complete" {
+  description = "After the initial cluster bootstrap, set true so a re-provisioned initial node joins the existing etcd (renders as a joining RKE2 server) instead of re-running cluster-init. MUST remain false during the very first genesis apply."
+  type        = bool
+  nullable    = false
+  default     = false
+}
+
+variable "control_plane_bootstrap_join_address" {
+  description = "Private IPv4 of a surviving control-plane peer, used as the re-provisioned initial node's server: target. Required when control_plane_bootstrap_complete = true."
+  type        = string
+  nullable    = false
+  default     = ""
+}
