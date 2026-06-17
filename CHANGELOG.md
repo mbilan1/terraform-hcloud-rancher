@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Rancher pod QoS / OOM resilience**: Pin `resources` (requests `cpu=500m`/`memory=1Gi`, limit `memory=2Gi`, no CPU limit) on the Rancher HelmChart values. The chart ships no resources by default, leaving pods in BestEffort QoS (`oom_score_adj=1000`) — the first victims of the node OOM-killer under memory pressure, which can kill the Rancher leader and stall the `rancher-system-agent` plan-watch that downstream provisioning depends on. Requests promote the pods to Burstable QoS so they survive pressure.
+
 ## [0.7.0] - 2026-04-16
 
 ### Added

@@ -132,6 +132,21 @@ locals {
               enabled: true
       YAML
 
+      # DECISION: Pin Rancher pod resource requests/limits (Burstable QoS).
+      # Why: The Rancher chart ships no resources by default, so its pods run in
+      #      BestEffort QoS. The kernel assigns BestEffort pods oom_score_adj=1000,
+      #      making them the first killed by the node OOM-killer under memory
+      #      pressure. On memory-constrained control-plane nodes (Rancher's 8 GB
+      #      minimum leaves little headroom) this can kill the Rancher leader and
+      #      stall the rancher-system-agent plan-watch that downstream provisioning
+      #      depends on. Setting requests promotes the pods to Burstable QoS
+      #      (oom_score_adj scaled by the request) so they survive pressure; the
+      #      memory limit caps runaway growth. No CPU limit on purpose — CPU
+      #      throttling would slow the agent watch loop.
+      # See: https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/
+      #      https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/installation-requirements
+      # TODO: Expose a rancher_resources variable if consumers need different
+      #       sizing; sensible default hardcoded for now.
       "01-rancher.yaml" = <<-YAML
         apiVersion: helm.cattle.io/v1
         kind: HelmChart
@@ -148,6 +163,12 @@ locals {
             hostname: "${local.effective_hostname}"
             bootstrapPassword: "${local.effective_admin_password}"
             replicas: ${var.rancher_replicas}
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                memory: 2Gi
             ingress:
               tls:
                 source: ${var.tls_source}
