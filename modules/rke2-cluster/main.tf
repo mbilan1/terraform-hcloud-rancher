@@ -17,8 +17,8 @@
 
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
-  # Tag: v0.6.0 — node-side initial-node bootstrap reassignment (control_plane_bootstrap_*)
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=e43c9efc583a7d1234e0382c4a89cc4870f34324"
+  # Tag: v0.7.0 — RKE2 v1.35.6+rke2r1 + hcloud 1.66.0 (carries v0.6.0 initial-node bootstrap reassignment)
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=742e1f707b52f1e182b3e792e765a4dc3c780f62"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name

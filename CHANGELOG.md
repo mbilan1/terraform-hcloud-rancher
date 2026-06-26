@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-06-27
+
+### Fixed
+
+- **rke2-core pin lockstep (provider conflict)**: Bumped the `rke2-core` pin `v0.6.0` (`e43c9ef`) → **`v0.7.0`** (`742e1f7`), which carries the hcloud `= 1.66.0` + RKE2 `v1.35.6+rke2r1` bumps down to the L3 layer. Fixes a provider-resolution failure introduced in v0.10.0, where the root required hcloud `= 1.66.0` but the pinned rke2-core (v0.6.0) still required `= 1.65.0` — two exact pins with no common version. Caught by `tofu init` in the consumer root.
+
 ## [0.10.0] - 2026-06-27
 
 ### Changed
