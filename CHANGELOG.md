@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-06-27
+
+### Fixed
+
+- **rke2-core pin → v0.7.1**: Bumped `v0.7.0` (`742e1f7`) → **`v0.7.1`** (`c03a84e`). v0.7.0 carried the hcloud `= 1.66.0` bump only in rke2-core's root `versions.tf`; its `_control_plane`/`_network` submodules still pinned `= 1.65.0`, so v0.10.1 still failed consumer provider resolution. v0.7.1 completes the hcloud `= 1.66.0` lockstep across all rke2-core submodules. Verified: clean resolution in the consumer root.
+
 ## [0.10.1] - 2026-06-27
 
 ### Fixed
