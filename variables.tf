@@ -207,7 +207,7 @@ variable "hcloud_image_rke2_version" {
   description = "Default RKE2 version baked into controller-triggered Packer snapshots. Used as DEFAULT_RKE2_VERSION env var in the controller."
   type        = string
   nullable    = false
-  default     = "v1.35.5+rke2r2"
+  default     = "v1.35.6+rke2r1"
 
   validation {
     condition     = can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.hcloud_image_rke2_version))
@@ -499,7 +499,7 @@ variable "rke2_version" {
   description = "RKE2 release tag to deploy (e.g. 'v1.34.4+rke2r1'). Leave empty for stable channel."
   type        = string
   nullable    = false
-  default     = "v1.35.5+rke2r2"
+  default     = "v1.35.6+rke2r1"
 
   validation {
     condition     = var.rke2_version == "" || can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.rke2_version))

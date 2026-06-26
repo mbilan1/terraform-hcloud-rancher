@@ -19,7 +19,7 @@
 ![hcloud](https://img.shields.io/badge/hcloud-1.65.0-E10000?logo=hetzner&logoColor=white)
 ![rancher2](https://img.shields.io/badge/rancher2-14.1.1-0075A8?logo=rancher&logoColor=white)
 ![random](https://img.shields.io/badge/random-3.9.0-7B42BC?logo=terraform&logoColor=white)
-![RKE2](https://img.shields.io/badge/RKE2-v1.35.5%2Brke2r2-0075A8?logo=kubernetes&logoColor=white)
+![RKE2](https://img.shields.io/badge/RKE2-v1.35.6%2Brke2r1-0075A8?logo=kubernetes&logoColor=white)
 
 > **⚠️ Experimental (Beta)** — This is an **unofficial** community implementation, under active development and **not production-ready**.
 > APIs, variables, and behavior may change without notice. Use at your own risk.
