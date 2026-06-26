@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-27
+
 ### Changed
 
 - **RKE2 default version**: Bumped from `v1.35.5+rke2r2` to `v1.35.6+rke2r1` (latest patch in the Rancher-2.14.2-certified `1.35` minor — **1.36 remains uncertified** by Rancher 2.14, so the minor is held at 1.35). Security-driven patch bump that pulls in the upstream 2026-06 component refresh (containerd, CoreDNS, CNI plugins). Updated the `rke2_version` and `hcloud_image_rke2_version` defaults and the README RKE2 version badge.
