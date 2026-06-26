@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - **RKE2 default version**: Bumped from `v1.35.5+rke2r2` to `v1.35.6+rke2r1` (latest patch in the Rancher-2.14.2-certified `1.35` minor — **1.36 remains uncertified** by Rancher 2.14, so the minor is held at 1.35). Security-driven patch bump that pulls in the upstream 2026-06 component refresh (containerd, CoreDNS, CNI plugins). Updated the `rke2_version` and `hcloud_image_rke2_version` defaults and the README RKE2 version badge.
+- **cert-manager**: Bumped `1.20.2` → `1.20.3` (latest stable patch; HIGH-severity fix GHSA-8rvj-mm4h-c258 — over-granted `cert-manager-edit` ClusterRole + Go CVEs; same `cert-manager.io/v1` API, no CRD change).
+- **hcloud provider**: Bumped `= 1.65.0` → `= 1.66.0` (latest stable; deprecations only — `hcloud_datacenter(s)` data sources, unused by this module). Updated versions.tf constraint + registry table + README badge.
+- **Cluster Autoscaler chart**: Bumped `9.57.0` → `9.58.0` (latest stable chart; K8s 1.35 compatible).
 
 ## [0.9.0] - 2026-06-18
 

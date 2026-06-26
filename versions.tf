@@ -30,7 +30,7 @@ terraform {
 
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "= 1.65.0"
+      version = "= 1.66.0"
     }
 
     # ── L4: Rancher management provider ───────────────────────────────────────
@@ -60,7 +60,7 @@ terraform {
 #
 # | Provider              | Source                  | Version   | Updated    |
 # |-----------------------|-------------------------|-----------|------------|
-# | hcloud                | hetznercloud/hcloud     | 1.65.0    | 2026-06-17 |
+# | hcloud                | hetznercloud/hcloud     | 1.66.0    | 2026-06-27 |
 # | rancher2              | rancher/rancher2        | 14.1.1    | 2026-06-17 |
 # | random                | hashicorp/random        | 3.9.0     | 2026-06-17 |
 # | kubectl (REMOVED)     | alekc/kubectl           | -         | 2026-03-04 |

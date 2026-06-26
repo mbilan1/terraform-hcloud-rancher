@@ -137,7 +137,7 @@ variable "cert_manager_version" {
   description = "cert-manager Helm chart version to install."
   type        = string
   nullable    = false
-  default     = "1.20.2"
+  default     = "1.20.3"
 
   validation {
     condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.cert_manager_version))
@@ -236,7 +236,7 @@ variable "cluster_autoscaler_version" {
   description = "Cluster Autoscaler Helm chart version (kubernetes/autoscaler)."
   type        = string
   nullable    = false
-  default     = "9.57.0"
+  default     = "9.58.0"
 
   validation {
     condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.cluster_autoscaler_version))
