@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-06-27
+
+### Fixed
+
+- **rke2-core pin → v0.7.2**: Bumped `v0.7.1` (`c03a84e`) → **`v0.7.2`** (`0e5a63b`). v0.7.2 projects `hcloud_server_network.*` `for_each` to an id-only map so it no longer surfaces the deprecated hcloud `datacenter` / `allow_deprecated_images` / `backup_window` computed attributes — removing ~188 "Value derived from a deprecated source" warning lines from every `plan`/`test` and making the module removal-proof for the hcloud `datacenter` attribute (gone after 2026-07-01). Cosmetic/hygiene only — no behavior change, same instances and keys.
+
 ## [0.10.2] - 2026-06-27
 
 ### Fixed
