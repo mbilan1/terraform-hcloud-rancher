@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.10.4] - 2026-07-30
+
+### Fixed
+
+- **Rancher OOM-collapse hardening (INV-084)**: raised the Rancher pod memory request `1Gi` → **`2Gi`** and limit `2Gi` → **`3Gi`**, and set **`antiAffinity: required`** in the Rancher HelmChart values. During the 2026-07-28 management-plane outage the 2Gi limit (the INV-082 fix) became the kill ceiling — Rancher's working set outgrew it under agent-reconnect load and the cgroup OOM-killer terminated the last serving replica — while the chart-default *soft* anti-affinity had legally double-packed two replicas onto one starved node, degrading "3-replica HA" to a single serving pod. `request=2Gi` makes scheduling honest and lowers `oom_score_adj`; `limit=3Gi` bounds a runaway leak below cx33 node capacity; `required` anti-affinity guarantees one replica per node with graceful Pending degradation (rolling updates stay safe: the chart sets `maxUnavailable=1` for `replicas > 1`). See rke2-hetzner-architecture INV-084.
+
+### Changed
+
+- **Rancher chart default `2.14.2` → `2.14.3`**: chart `2.14.0` was withdrawn from the `stable` repository (index now starts at `2.14.1`; the `2.14.0` tgz returns `NoSuchKey`), so any HelmChart re-render pinned to it fails at chart download. `2.14.3` is the latest patch of the line (`kubeVersion < 1.36.0-0`, compatible with the RKE2 `v1.35.x` this module deploys).
+
 ## [0.10.3] - 2026-06-27
 
 ### Fixed

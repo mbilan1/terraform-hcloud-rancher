@@ -40,7 +40,7 @@ variable "rancher_version" {
   description = "Rancher Helm chart version to install (e.g. '2.13.3'). Must be compatible with the Kubernetes version."
   type        = string
   nullable    = false
-  default     = "2.14.2"
+  default     = "2.14.3"
 
   validation {
     condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.rancher_version))

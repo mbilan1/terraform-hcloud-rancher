@@ -132,19 +132,31 @@ locals {
               enabled: true
       YAML
 
-      # DECISION: Pin Rancher pod resource requests/limits (Burstable QoS).
+      # DECISION: Pin Rancher pod resource requests/limits (Burstable QoS) AND
+      #           enforce hard (required) pod anti-affinity across nodes.
       # Why: The Rancher chart ships no resources by default, so its pods run in
       #      BestEffort QoS. The kernel assigns BestEffort pods oom_score_adj=1000,
       #      making them the first killed by the node OOM-killer under memory
-      #      pressure. On memory-constrained control-plane nodes (Rancher's 8 GB
-      #      minimum leaves little headroom) this can kill the Rancher leader and
-      #      stall the rancher-system-agent plan-watch that downstream provisioning
-      #      depends on. Setting requests promotes the pods to Burstable QoS
-      #      (oom_score_adj scaled by the request) so they survive pressure; the
-      #      memory limit caps runaway growth. No CPU limit on purpose — CPU
-      #      throttling would slow the agent watch loop.
+      #      pressure (INV-082, 2026-06-17). The 2026-07-28 mgmt outage (INV-084)
+      #      then proved two more failure modes on the same 8 GB nodes:
+      #      1. The original 1Gi request / 2Gi limit became the kill ceiling —
+      #         Rancher's working set grew past 2Gi under agent-reconnect load and
+      #         the cgroup OOM-killer terminated the last serving replica.
+      #         request=2Gi makes scheduling honest (and lowers oom_score_adj);
+      #         limit=3Gi leaves storm headroom while still bounding a runaway
+      #         leak below node capacity (3Gi + ~3.3Gi system base < 7.57Gi
+      #         allocatable on cx33).
+      #      2. The chart-default SOFT anti-affinity legally double-packed two
+      #         replicas onto one starved node where startup probes could never
+      #         pass — "3 replicas HA" degraded to a single serving pod.
+      #         antiAffinity=required guarantees one replica per node; a displaced
+      #         replica goes Pending (graceful degradation) instead of collapsing
+      #         a node. Safe for rolling updates: the chart sets maxUnavailable=1
+      #         when replicas > 1, so the old pod frees the node first.
+      #      No CPU limit on purpose — CPU throttling would slow the agent watch
+      #      loop.
       # See: https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/
-      #      https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/installation-requirements
+      #      rke2-hetzner-architecture INV-082, INV-084
       # TODO: Expose a rancher_resources variable if consumers need different
       #       sizing; sensible default hardcoded for now.
       "01-rancher.yaml" = <<-YAML
@@ -163,12 +175,13 @@ locals {
             hostname: "${local.effective_hostname}"
             bootstrapPassword: "${local.effective_admin_password}"
             replicas: ${var.rancher_replicas}
+            antiAffinity: required
             resources:
               requests:
                 cpu: 500m
-                memory: 1Gi
-              limits:
                 memory: 2Gi
+              limits:
+                memory: 3Gi
             ingress:
               tls:
                 source: ${var.tls_source}
