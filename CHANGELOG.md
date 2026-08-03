@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-03
+
+### Added
+
+- **Dedicated worker node for the management plane (`management_worker_count`, default `1`; `worker_server_type`, default `cx33`)**: the management cluster now provisions a worker node alongside its control plane, using the new `_agent` module in `terraform-hcloud-rke2-core`. Until now the module produced a control-plane-only cluster, so Rancher, monitoring, Fleet, CAPI, the cluster autoscalers, the webhook and metrics-server all competed with kube-apiserver (~2.1 GiB, no limit) and etcd for the 8 GB on each CP node. That single fact produced both management-plane outages of 2026-07/08: first an OOM cascade (35 h), then a scheduling deadlock where the third Rancher replica sat `Pending` for 42 h because `antiAffinity: required` had no free node to place it on (`0/3 nodes are available: 1 Insufficient memory, 2 node(s) had untolerated taint(s)`). The worker gives addon workloads their own capacity **and** acts as the N+1 landing spot that makes required anti-affinity safe. `management_worker_count = 0` restores the previous control-plane-only topology. See ADR-013 and rke2-hetzner-architecture INV-084.
+
+### Changed
+
+- **`terraform-hcloud-rke2-core` pin → `732e62e`** (`feat/agent-nodes`) for the `_agent` module.
+
 ## [0.10.4] - 2026-07-30
 
 ### Fixed

@@ -37,6 +37,30 @@ variable "control_plane_server_type" {
   nullable    = false
 }
 
+# DECISION: Worker capacity is expressed as count + type, matching the
+#           control-plane API of this wrapper.
+# Why: The consumer should not have to know rke2-core's internal map shape.
+#      Workers exist so the management plane has workload capacity separate
+#      from its control plane — ADR-013.
+variable "worker_count" {
+  description = "Number of worker (agent) nodes. 0 = control-plane-only cluster."
+  type        = number
+  nullable    = false
+  default     = 0
+
+  validation {
+    condition     = var.worker_count >= 0
+    error_message = "worker_count must be zero or positive."
+  }
+}
+
+variable "worker_server_type" {
+  description = "Hetzner Cloud server type for worker nodes."
+  type        = string
+  nullable    = false
+  default     = "cx33"
+}
+
 variable "node_location" {
   description = "Primary Hetzner datacenter location"
   type        = string

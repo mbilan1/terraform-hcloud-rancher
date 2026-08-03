@@ -300,6 +300,32 @@ variable "management_node_count" {
   }
 }
 
+# DECISION: The management cluster gets dedicated worker capacity by default.
+# Why: Running Rancher, monitoring, Fleet, CAPI and the cluster autoscalers on
+#      the same nodes as kube-apiserver and etcd caused two production outages
+#      (INV-084): first an OOM cascade, then a scheduling deadlock. One worker
+#      hosts the addon set and doubles as the N+1 landing spot that makes
+#      required anti-affinity safe for the three Rancher replicas.
+# See: ADR-013, rke2-hetzner-architecture INV-084
+variable "management_worker_count" {
+  description = "Number of dedicated worker nodes for addon workloads. 0 keeps the legacy control-plane-only topology."
+  type        = number
+  nullable    = false
+  default     = 1
+
+  validation {
+    condition     = var.management_worker_count >= 0
+    error_message = "management_worker_count must be zero or positive."
+  }
+}
+
+variable "worker_server_type" {
+  description = "Hetzner Cloud server type for management worker nodes. cx33 (4 vCPU, 8 GB) fits the addon set plus a displaced Rancher replica."
+  type        = string
+  nullable    = false
+  default     = "cx33"
+}
+
 variable "control_plane_server_type" {
   description = "Hetzner Cloud server type for management cluster nodes. Minimum cx43 (8 vCPU, 16 GB) for Rancher."
   type        = string

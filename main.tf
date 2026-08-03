@@ -415,6 +415,8 @@ module "rke2_cluster" {
   # Topology
   control_plane_count       = var.management_node_count
   control_plane_server_type = var.control_plane_server_type
+  worker_count              = var.management_worker_count
+  worker_server_type        = var.worker_server_type
   node_location             = var.node_location
 
   # Network

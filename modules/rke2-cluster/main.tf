@@ -18,7 +18,7 @@
 module "cluster" {
   # DECISION: Source pinned to commit hash for supply chain security (CKV_TF_1).
   # Tag: v0.7.2 — hcloud datacenter for_each deprecation fix (carries v0.7.1 hcloud 1.66.0 lockstep + RKE2 v1.35.6+rke2r1 + v0.6.0 initial-node bootstrap reassignment)
-  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=0e5a63bc62a53a0ee590d0e6e162b14b97195202"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git?ref=732e62e64d8995df1434f77654c54a8c6d0df47e"
 
   # ── Cluster identity ─────────────────────────────────────────────────────
   cluster_name = var.cluster_name
@@ -32,6 +32,18 @@ module "cluster" {
     for i in range(var.control_plane_count) : "cp-${i}" => {
       server_type = var.control_plane_server_type
       location    = var.node_location
+    }
+  }
+
+  # DECISION: Worker nodes carry the standard worker role label.
+  # Why: Addon workloads select them with a plain nodeSelector, and the label
+  #      makes `kubectl get nodes` show ROLES=worker instead of <none>.
+  # See: ADR-013 — Control Plane Workload Separation
+  agent_nodes = {
+    for i in range(var.worker_count) : "worker-${i}" => {
+      server_type = var.worker_server_type
+      location    = var.node_location
+      node_labels = ["node-role.kubernetes.io/worker=true"]
     }
   }
 
