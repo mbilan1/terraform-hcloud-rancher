@@ -230,7 +230,8 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `style`, `test`, `ci`
 ## Architecture Knowledge Base
 
 Full architectural context is maintained in a separate repository:
-- **Repo**: [rke2-hetzner-architecture](https://github.com/mbilan1/rke2-hetzner-architecture)
+- **Repo**: [rke2-hetzner-architecture](https://github.com/Abstract-Tech/rke2-hetzner-architecture)
+- **NOTE**: This repo, `terraform-hcloud-rke2-core` and `rke2-hetzner-architecture` live in the GitHub org `Abstract-Tech` (transferred from `mbilan1` — old URLs still redirect, local clone remotes may be stale). Verify ownership via `gh api repos/<owner>/<repo> --jq .full_name`, never via `git remote -v`.
 - Contains: ADRs, investigation reports, design documents
 - Read it for platform-wide context that spans multiple repos
 
