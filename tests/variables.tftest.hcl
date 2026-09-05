@@ -910,6 +910,21 @@ run "kyverno_policies_version_accepts_semver" {
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  UT-V24: kyverno_validation_action — must be Audit or Enforce              ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
+run "kyverno_validation_action_default_audit" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+  }
+
+  assert {
+    condition     = var.kyverno_validation_action == "Audit"
+    error_message = "kyverno_validation_action should default to Audit."
+  }
+}
+
 run "kyverno_validation_action_rejects_invalid" {
   command = plan
 
