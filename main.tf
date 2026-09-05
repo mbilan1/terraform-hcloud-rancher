@@ -107,6 +107,14 @@ locals {
 #      and kubectl Terraform providers entirely — only hcloud + rancher2 remain.
 # See: https://docs.rke2.io/helm — HelmChart CRD documentation
 locals {
+  kyverno_exempt_namespaces = [
+    "kube-system",
+    "cattle-system",
+    "cattle-fleet-system",
+    "cert-manager",
+    "kyverno",
+  ]
+
   # DECISION: Numeric prefix ensures alphabetical processing order.
   # Why: RKE2 processes manifests alphabetically. cert-manager MUST install
   #      before Rancher (Rancher creates Certificate resources that require
@@ -357,14 +365,12 @@ locals {
               replicas: 1
             config:
               resourceFilters:
-                - '[*,kube-system,*]'
-                - '[*,cattle-system,*]'
-                - '[*,cattle-fleet-system,*]'
-                - '[*,cert-manager,*]'
-                - '[*,kyverno,*]'
+%{for ns in local.kyverno_exempt_namespaces~}
+                - '[*,${ns},*]'
+%{endfor~}
       YAML
 
-      "05-kyverno-policies.yaml" = <<-YAML
+      "06-kyverno-policies.yaml" = <<-YAML
         apiVersion: helm.cattle.io/v1
         kind: HelmChart
         metadata:
@@ -375,12 +381,13 @@ locals {
           chart: kyverno-policies
           version: "${var.kyverno_policies_version}"
           targetNamespace: kyverno
+          createNamespace: true
           valuesContent: |-
             podSecurityStandard: baseline
             validationFailureAction: ${var.kyverno_validation_action}
       YAML
 
-      "06-kyverno-custom-policies.yaml" = <<-YAML
+      "07-kyverno-custom-policies.yaml" = <<-YAML
         apiVersion: kyverno.io/v1
         kind: ClusterPolicy
         metadata:
@@ -399,17 +406,22 @@ locals {
               any:
               - resources:
                   namespaces:
-                  - kube-system
-                  - cattle-system
-                  - cattle-fleet-system
-                  - cert-manager
-                  - kyverno
+%{for ns in local.kyverno_exempt_namespaces~}
+                  - ${ns}
+%{endfor~}
             validate:
               message: "Using ':latest' or omitting image tags is prohibited."
-              pattern:
-                spec:
-                  containers:
-                  - image: "!*:latest"
+              foreach:
+              - list: "request.object.spec.[ephemeralContainers, initContainers, containers][]"
+                deny:
+                  conditions:
+                    any:
+                    - key: "{{ element.image }}"
+                      operator: Equals
+                      value: "*:latest"
+                    - key: "{{ contains(element.image, ':') }}"
+                      operator: Equals
+                      value: false
         ---
         apiVersion: kyverno.io/v1
         kind: ClusterPolicy
@@ -429,11 +441,9 @@ locals {
               any:
               - resources:
                   namespaces:
-                  - kube-system
-                  - cattle-system
-                  - cattle-fleet-system
-                  - cert-manager
-                  - kyverno
+%{for ns in local.kyverno_exempt_namespaces~}
+                  - ${ns}
+%{endfor~}
             validate:
               message: "CPU and memory resource requests and limits are required."
               pattern:
