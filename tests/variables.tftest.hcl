@@ -812,3 +812,150 @@ run "rancher_replicas_accepts_three" {
     rancher_replicas = 3
   }
 }
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V21: install_kyverno — accepts true/false                              ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "install_kyverno_default_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+  }
+
+  assert {
+    condition     = var.install_kyverno == false
+    error_message = "install_kyverno should default to false."
+  }
+}
+
+run "install_kyverno_accepts_true" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    install_kyverno  = true
+  }
+}
+
+run "install_kyverno_accepts_false" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    install_kyverno  = false
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V22: kyverno_version — must be semver                                  ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "kyverno_version_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    kyverno_version  = "latest"
+  }
+
+  expect_failures = [var.kyverno_version]
+}
+
+run "kyverno_version_accepts_semver" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+    kyverno_version  = "3.9.0"
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V23: kyverno_policies_version — must be semver                         ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "kyverno_policies_version_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token         = "mock-token"
+    rancher_hostname         = "rancher.example.com"
+    admin_password           = "SecurePassword123"
+    kyverno_policies_version = "v3"
+  }
+
+  expect_failures = [var.kyverno_policies_version]
+}
+
+run "kyverno_policies_version_accepts_semver" {
+  command = plan
+
+  variables {
+    hcloud_api_token         = "mock-token"
+    rancher_hostname         = "rancher.example.com"
+    admin_password           = "SecurePassword123"
+    kyverno_policies_version = "3.9.0"
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  UT-V24: kyverno_validation_action — must be Audit or Enforce              ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+run "kyverno_validation_action_default_audit" {
+  command = plan
+
+  variables {
+    hcloud_api_token = "mock-token"
+    rancher_hostname = "rancher.example.com"
+    admin_password   = "SecurePassword123"
+  }
+
+  assert {
+    condition     = var.kyverno_validation_action == "Audit"
+    error_message = "kyverno_validation_action should default to Audit."
+  }
+}
+
+run "kyverno_validation_action_rejects_invalid" {
+  command = plan
+
+  variables {
+    hcloud_api_token          = "mock-token"
+    rancher_hostname          = "rancher.example.com"
+    admin_password            = "SecurePassword123"
+    kyverno_validation_action = "warn"
+  }
+
+  expect_failures = [var.kyverno_validation_action]
+}
+
+run "kyverno_validation_action_accepts_audit" {
+  command = plan
+
+  variables {
+    hcloud_api_token          = "mock-token"
+    rancher_hostname          = "rancher.example.com"
+    admin_password            = "SecurePassword123"
+    kyverno_validation_action = "Audit"
+  }
+}
+
+run "kyverno_validation_action_accepts_enforce" {
+  command = plan
+
+  variables {
+    hcloud_api_token          = "mock-token"
+    rancher_hostname          = "rancher.example.com"
+    admin_password            = "SecurePassword123"
+    kyverno_validation_action = "Enforce"
+  }
+}

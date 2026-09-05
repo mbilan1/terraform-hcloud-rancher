@@ -107,6 +107,14 @@ locals {
 #      and kubectl Terraform providers entirely — only hcloud + rancher2 remain.
 # See: https://docs.rke2.io/helm — HelmChart CRD documentation
 locals {
+  kyverno_exempt_namespaces = [
+    "kube-system",
+    "cattle-system",
+    "cattle-fleet-system",
+    "cert-manager",
+    "kyverno",
+  ]
+
   # DECISION: Numeric prefix ensures alphabetical processing order.
   # Why: RKE2 processes manifests alphabetically. cert-manager MUST install
   #      before Rancher (Rancher creates Certificate resources that require
@@ -335,6 +343,133 @@ locals {
               balance-similar-node-groups: "true"
               namespace: fleet-default
               node-group-auto-discovery: "clusterapi:namespace=fleet-default"
+      YAML
+    } : {},
+
+    # Kyverno policy engine + baseline policies
+    var.install_kyverno ? {
+      "05-kyverno.yaml" = <<-YAML
+        apiVersion: helm.cattle.io/v1
+        kind: HelmChart
+        metadata:
+          name: kyverno
+          namespace: kube-system
+        spec:
+          repo: https://kyverno.github.io/kyverno/
+          chart: kyverno
+          version: "${var.kyverno_version}"
+          targetNamespace: kyverno
+          createNamespace: true
+          valuesContent: |-
+            admissionController:
+              replicas: 1
+            config:
+              resourceFilters:
+%{for ns in local.kyverno_exempt_namespaces~}
+                - '[*,${ns},*]'
+%{endfor~}
+      YAML
+
+      "06-kyverno-policies.yaml" = <<-YAML
+        apiVersion: helm.cattle.io/v1
+        kind: HelmChart
+        metadata:
+          name: kyverno-policies
+          namespace: kube-system
+        spec:
+          repo: https://kyverno.github.io/kyverno/
+          chart: kyverno-policies
+          version: "${var.kyverno_policies_version}"
+          targetNamespace: kyverno
+          createNamespace: true
+          valuesContent: |-
+            podSecurityStandard: baseline
+            validationFailureAction: ${var.kyverno_validation_action}
+      YAML
+
+      "07-kyverno-custom-policies.yaml" = <<-YAML
+        apiVersion: kyverno.io/v1
+        kind: ClusterPolicy
+        metadata:
+          name: disallow-latest-tag
+        spec:
+          validationFailureAction: ${var.kyverno_validation_action}
+          background: true
+          rules:
+          - name: validate-image-tag
+            match:
+              any:
+              - resources:
+                  kinds:
+                  - Pod
+            exclude:
+              any:
+              - resources:
+                  namespaces:
+%{for ns in local.kyverno_exempt_namespaces~}
+                  - ${ns}
+%{endfor~}
+            validate:
+              message: "Using ':latest' or omitting image tags is prohibited."
+              foreach:
+              - list: "request.object.spec.[ephemeralContainers, initContainers, containers][]"
+                deny:
+                  conditions:
+                    any:
+                    - key: "{{ element.image }}"
+                      operator: Equals
+                      value: "*:latest"
+                    - key: "{{ contains(element.image, ':') }}"
+                      operator: Equals
+                      value: false
+        ---
+        apiVersion: kyverno.io/v1
+        kind: ClusterPolicy
+        metadata:
+          name: require-requests-limits
+        spec:
+          validationFailureAction: ${var.kyverno_validation_action}
+          background: true
+          rules:
+          - name: validate-resources
+            match:
+              any:
+              - resources:
+                  kinds:
+                  - Pod
+            exclude:
+              any:
+              - resources:
+                  namespaces:
+%{for ns in local.kyverno_exempt_namespaces~}
+                  - ${ns}
+%{endfor~}
+            validate:
+              message: "CPU and memory resource requests and limits are required."
+              pattern:
+                spec:
+                  containers:
+                  - resources:
+                      requests:
+                        memory: "?*"
+                        cpu: "?*"
+                      limits:
+                        memory: "?*"
+                        cpu: "?*"
+      YAML
+    } : {},
+
+    # Pre-create Kyverno namespace with PSA exemption when CIS is enabled
+    var.install_kyverno && var.enable_cis ? {
+      "00-psa-ns-kyverno.yaml" = <<-YAML
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: kyverno
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: privileged
+            pod-security.kubernetes.io/warn: privileged
       YAML
     } : {},
 

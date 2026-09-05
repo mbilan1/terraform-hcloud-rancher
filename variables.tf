@@ -245,6 +245,53 @@ variable "cluster_autoscaler_version" {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Kyverno Policy Engine
+# ═══════════════════════════════════════════════════════════════════════════════
+
+variable "install_kyverno" {
+  description = "Install Kyverno policy engine on the management cluster via HelmChart manifest at bootstrap."
+  type        = bool
+  nullable    = false
+  default     = false
+}
+
+variable "kyverno_version" {
+  description = "Kyverno Helm chart version to install."
+  type        = string
+  nullable    = false
+  default     = "3.9.0"
+
+  validation {
+    condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.kyverno_version))
+    error_message = "kyverno_version must be a semantic version (e.g. '3.9.0')."
+  }
+}
+
+variable "kyverno_policies_version" {
+  description = "Kyverno baseline policies Helm chart version. Deploys Kubernetes Pod Security Standards as Kyverno policies."
+  type        = string
+  nullable    = false
+  default     = "3.9.0"
+
+  validation {
+    condition     = can(regex("^\\d+\\.\\d+\\.\\d+", var.kyverno_policies_version))
+    error_message = "kyverno_policies_version must be a semantic version (e.g. '3.9.0')."
+  }
+}
+
+variable "kyverno_validation_action" {
+  description = "Policy enforcement mode. 'Audit' logs violations without blocking. 'Enforce' rejects non-compliant workloads."
+  type        = string
+  nullable    = false
+  default     = "Audit"
+
+  validation {
+    condition     = contains(["Audit", "Enforce"], var.kyverno_validation_action)
+    error_message = "kyverno_validation_action must be 'Audit' or 'Enforce'."
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  Ingress Load Balancer (BYO pattern)
 # ═══════════════════════════════════════════════════════════════════════════════
 
